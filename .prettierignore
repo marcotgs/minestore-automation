@@ -1,0 +1,10 @@
+.cache
+package.json
+yarn.lock
+public
+.husky
+.prettierignore
+.eslintignore
+.gitignore
+**/*.png
+**/*.jpg
