@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "commonjs",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "esnext",
+    "sourceMap": true,
     "baseUrl": ".",
     "incremental": true
   },
-  "exclude": ["node_modules", "*/*dist"]
+  "exclude": ["node_modules", "**/*.spec.ts"]
 }

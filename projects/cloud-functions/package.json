@@ -1,14 +1,28 @@
 {
-  "name": "getallproducts",
-  "version": "0.1.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@minestore/cloud-functions",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "rimraf dist",
+    "build:watch": "tsc --watch &> /dev/null",
+    "build": "yarn clean && tsc",
+    "serve": "firebase emulators:start --import ./config/seed-data",
+    "start": "yarn build && concurrently --kill-others \"yarn serve\" \"yarn build:watch\"",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log",
+    "stop:emulator": "lsof -ti :4000 | xargs kill"
   },
-  "author": "serverless.com",
-  "license": "MIT",
+  "engines": {
+    "node": "12"
+  },
+  "dependencies": {
+    "@google-cloud/pubsub": "^2.10.0",
+    "firebase-admin": "^9.6.0",
+    "firebase-functions": "^3.13.0"
+  },
   "devDependencies": {
-    "serverless-google-cloudfunctions": "*"
+    "concurrently": "^6.0.0",
+    "firebase-functions-test": "^0.2.0"
   }
 }

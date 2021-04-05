@@ -1,5 +1,5 @@
 # compiled output
-/dist
+**/dist
 node_modules
 .webpack
 
@@ -74,3 +74,5 @@ yarn-error.log*
 .env
 .env.*
 !.env.example
+
+typings/

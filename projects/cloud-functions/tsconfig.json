@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "outDir": "dist",
+    "baseUrl": "./src",
+    "strict": true,
+    "paths": {
+      "@db/*": ["./db/*"]
+    }
+  },
+  "compileOnSave": true,
+  "include": ["src"]
+}
