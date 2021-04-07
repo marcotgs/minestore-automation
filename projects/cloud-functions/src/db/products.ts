@@ -1,12 +1,4 @@
-export interface Product {
-	id: string;
-	minestore_id: string;
-	name: string;
-	supplier_url: string;
-	created_date: string;
-	updated_date?: string;
-	status: ProductStatus;
-}
+import { Collection, getRepository } from 'fireorm';
 
 export enum ProductStatus {
 	new = 'NEW',
@@ -14,3 +6,22 @@ export enum ProductStatus {
 	sold_out = 'SOLD_OUT',
 	synced_error = 'SYNCED_ERROR',
 }
+
+@Collection()
+export class Product {
+	id!: string;
+
+	minestore_id!: string;
+
+	name!: string;
+
+	supplier_url!: string;
+
+	status!: ProductStatus;
+
+	created_date!: string;
+
+	updated_date?: string;
+}
+
+export const productRepository = getRepository(Product);

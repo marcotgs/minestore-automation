@@ -1,21 +1,16 @@
 import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
-import { PubSub } from '@google-cloud/pubsub';
-import { Product } from '@db/products';
+import { productRepository } from '../db/products';
 
-const projectId = 'minestore-automation';
-admin.initializeApp();
-const db = admin.firestore();
-// const pubsub = new PubSub({ projectId });
-// const [topic] = await pubsub.createTopic(topicName);
+// admin.initializeApp();
+// const firestore = admin.firestore();
 
-async function getProductsDb(): Promise<Product[]> {
-	const productsSnapshot = await db.collection('products').get();
-	return productsSnapshot.docs.map((doc) => ({
-		...(doc.data() as Product),
-		id: doc.id,
-	}));
-}
+// async function getProductsDb(): Promise<any[]> {
+// 	const productsSnapshot = await firestore.collection('products').get();
+// 	return productsSnapshot.docs.map((doc) => ({
+// 		...doc.data(),
+// 		id: doc.id,
+// 	}));
+// }
 
 export const scheduledGetProducts = functions
 	.region('southamerica-east1')
@@ -25,10 +20,10 @@ export const scheduledGetProducts = functions
 		functions.logger.info(`get products - ${context.timestamp}`, {
 			structuredData: true,
 		});
-		await getProductsDb();
+		// await getProductsDb();
 	});
 
 export const getProducts = functions.https.onRequest(async (_req, res) => {
-	const data = await getProductsDb();
+	const data = await productRepository.findById('8C3405K7bkM6vDxw3LNK');
 	res.json(data);
 });

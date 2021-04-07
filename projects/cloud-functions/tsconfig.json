@@ -4,13 +4,13 @@
     "esModuleInterop": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
-    "outDir": "dist",
+    "outDir": "./dist",
     "baseUrl": "./src",
     "strict": true,
     "paths": {
-      "@db/*": ["./db/*"]
+      "@db/*": ["db/*"]
     }
   },
   "compileOnSave": true,
-  "include": ["src"]
+  "include": ["src/**/*.ts"]
 }
