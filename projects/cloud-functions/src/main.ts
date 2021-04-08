@@ -1,5 +1,7 @@
+import admin from 'firebase-admin';
 import { initFirestore } from './db/init';
 
-initFirestore();
+admin.initializeApp();
+initFirestore(admin);
 
 export * from './getProducts';

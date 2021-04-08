@@ -1,9 +1,9 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
+    "allowJs": true,
     "outDir": "./dist",
     "baseUrl": "./src",
     "strict": true,
@@ -12,5 +12,5 @@
     }
   },
   "compileOnSave": true,
-  "include": ["src/**/*.ts"]
+  "include": ["src"]
 }

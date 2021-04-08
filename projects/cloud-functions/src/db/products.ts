@@ -7,7 +7,7 @@ export enum ProductStatus {
 	synced_error = 'SYNCED_ERROR',
 }
 
-@Collection()
+@Collection('products')
 export class Product {
 	id!: string;
 

@@ -76,3 +76,5 @@ yarn-error.log*
 !.env.example
 
 typings/
+
+**/coverage

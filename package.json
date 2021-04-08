@@ -20,14 +20,14 @@
   },
   "scripts": {
     "postinstall": "husky install",
-    "serve:functions": "",
     "lerna": "lerna",
-    "lint": "eslint \"*/**/*.{js,ts}\" --quiet --fix"
+    "lint": "eslint \"*/**/*.{js,ts}\" --quiet --fix",
+    "test": "jest --watch --coverage"
   },
   "devDependencies": {
     "@commitlint/cli": "^12.0.1",
     "@commitlint/config-conventional": "^8.3.4",
-    "@types/jest": "26.0.20",
+    "@types/jest": "^26.0.22",
     "@types/node": "^14.0.14",
     "@types/supertest": "^2.0.9",
     "@typescript-eslint/eslint-plugin": "^4.4.1",
@@ -50,6 +50,7 @@
     "supertest": "^6.1.3",
     "ts-jest": "^26.5.3",
     "tsc-watch": "^4.2.9",
+    "tsconfig-paths": "^3.9.0",
     "typescript": "^4.2.3"
   }
 }
