@@ -3,12 +3,14 @@
   "compilerOptions": {
     "noImplicitReturns": true,
     "noUnusedLocals": true,
+    "resolveJsonModule": true,
     "allowJs": true,
+    "declaration": false,
     "outDir": "./dist",
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "strict": true,
     "paths": {
-      "@db/*": ["db/*"]
+      "@db/*": ["./src/db/*"]
     }
   },
   "compileOnSave": true,

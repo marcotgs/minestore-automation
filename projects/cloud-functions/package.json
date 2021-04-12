@@ -5,11 +5,12 @@
   "private": true,
   "scripts": {
     "clean": "rimraf dist",
-    "start": "yarn clean && yarn start:dev",
-    "start:dev": "tsc-watch --onFirstSuccess \"yarn start:emulator\" ",
+    "build": "yarn clean && webpack --mode=production",
+    "start": "yarn clean && concurrently -k \"yarn:start:*\" ",
+    "start:dev": "webpack --watch --mode=development",
     "start:emulator": "firebase emulators:start --import ./config/seed-data",
-    "start:shell": "firebase functions:shell",
-    "test": "jest --watch --coverage",
+    "shell": "firebase functions:shell",
+    "test": "jest --watch --coverage -o",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log"
   },
@@ -25,6 +26,7 @@
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "firebase-functions-test": "^0.2.0"
+    "firebase-functions-test": "^0.2.0",
+    "webpack-shell-plugin": "^0.5.0"
   }
 }

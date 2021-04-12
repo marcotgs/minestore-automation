@@ -1,7 +1,11 @@
-import admin from 'firebase-admin';
-import { initFirestore } from './db/init';
+import { initializeApp } from 'firebase-admin';
+import { initFirestore } from '@db/init';
 
-admin.initializeApp();
-initFirestore(admin);
+export const init = (): void => {
+	const app = initializeApp();
+	initFirestore(app);
+};
 
-export * from './getProducts';
+init();
+
+export * from './functions';

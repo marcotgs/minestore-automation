@@ -5,6 +5,7 @@ module.exports = {
 
 	collectCoverage: true,
 	collectCoverageFrom: ['src/**/*.{ts,tsx}'],
+	coveragePathIgnorePatterns: ['node_modules', 'index.ts'],
 
 	// The directory where Jest should output its coverage files
 	coverageDirectory: '<rootDir>/coverage',

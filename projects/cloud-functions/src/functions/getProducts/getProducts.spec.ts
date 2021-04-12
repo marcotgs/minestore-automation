@@ -1,9 +1,7 @@
 import { Request } from 'firebase-functions';
 
 import { getProducts, scheduledGetProducts } from './getProducts';
-import { Product, productRepository, ProductStatus } from '../db/products';
-
-jest.mock('../db/products');
+import { Product, productRepository, ProductStatus } from '@db/products';
 
 describe('getProducts', () => {
 	const req = { body: {} } as Request;
@@ -27,7 +25,7 @@ describe('getProducts', () => {
 	});
 
 	test('should get products array from database in the scheduled function', async () => {
-		scheduledGetProducts({}, {});
+		scheduledGetProducts({}, { timestamp: new Date().toISOString() });
 		expect(productRepository.find).toBeCalledWith();
 	});
 
