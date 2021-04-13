@@ -22,7 +22,7 @@
     "postinstall": "husky install",
     "lerna": "lerna",
     "lint": "eslint \"*/**/*.{js,ts}\" --quiet --fix",
-    "test": "jest --watch --coverage -o"
+    "test": "jest --watch --coverage -o --detectOpenHandles "
   },
   "devDependencies": {
     "@commitlint/cli": "^12.0.1",

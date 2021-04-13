@@ -1,6 +1,5 @@
 'use strict';
 
-var glob = require('glob');
 var nodeExternals = require('webpack-node-externals');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
@@ -31,7 +30,7 @@ module.exports = (_env, argv) => {
 		output: {
 			filename: '[name].js',
 			sourceMapFilename: '[file].map',
-			libraryTarget: isDevelopment ? 'commonjs2' : 'commonjs',
+			libraryTarget: 'commonjs2',
 		},
 		optimization: {
 			minimize: false,
@@ -54,7 +53,12 @@ module.exports = (_env, argv) => {
 			extensions: ['.ts', '.tsx', '.js'],
 			plugins: [new TsconfigPathsPlugin()],
 		},
-		externals: [nodeExternals(), 'firebase-admin', '@firebase'],
+		externals: [
+			nodeExternals(),
+			'firebase-admin',
+			'@firebase',
+			'@google-cloud/pubsub',
+		],
 		...(isDevelopment && customStats),
 	};
 };

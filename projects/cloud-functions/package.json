@@ -6,7 +6,8 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "yarn clean && webpack --mode=production",
-    "start": "yarn clean && concurrently -k \"yarn:start:*\" ",
+    "build:dev": "yarn clean && webpack --mode=development",
+    "start": "yarn clean && yarn build:dev && concurrently -k \"yarn:start:*\" ",
     "start:dev": "webpack --watch --mode=development",
     "start:emulator": "firebase emulators:start --import ./config/seed-data",
     "shell": "firebase functions:shell",

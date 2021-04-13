@@ -10,7 +10,8 @@
     "baseUrl": ".",
     "strict": true,
     "paths": {
-      "@db/*": ["./src/db/*"]
+      "@db/*": ["./src/db/*"],
+      "@pubsub/*": ["./src/pubsub/*"]
     }
   },
   "compileOnSave": true,

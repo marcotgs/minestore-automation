@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2018",
+    "target": "es2019",
     "module": "commonjs",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "declaration": true,
     "removeComments": true,
@@ -11,5 +12,5 @@
     "baseUrl": ".",
     "incremental": true
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "src/testing/**.*", "src/___mocks___/**.*"]
 }

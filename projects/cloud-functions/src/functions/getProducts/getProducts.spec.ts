@@ -1,22 +1,17 @@
-import { Request } from 'firebase-functions';
-
+import { Request, logger } from 'firebase-functions';
+import { Product, productRepository } from '@db/products';
+import { ProductsTopic } from '@pubsub/products';
 import { getProducts, scheduledGetProducts } from './getProducts';
-import { Product, productRepository, ProductStatus } from '@db/products';
+import { productsMocks } from '@db/__mocks__/products.mocks';
 
-describe('getProducts', () => {
+jest.mock('@pubsub/products');
+
+describe('functions:getProducts', () => {
+	const publishSpy = jest.spyOn(ProductsTopic.prototype, 'publish');
 	const req = { body: {} } as Request;
 	const res: any = { json: jest.fn() };
-	const mockProducts: Product[] = [
-		{
-			id: 'a729d75e-fd8c-48ae-917a-c4fa6c33401d',
-			name: 'Fantastic Plastic Car',
-			minestore_id: '93564',
-			created_date:
-				'Thu Apr 08 2021 23:09:53 GMT+0200 (Central European Summer Time)',
-			status: ProductStatus.new,
-			supplier_url: 'https://lulu.name',
-		},
-	];
+
+	const mockProducts: Product[] = productsMocks;
 
 	beforeAll(() => {
 		productRepository.find = jest
@@ -24,13 +19,34 @@ describe('getProducts', () => {
 			.mockImplementation(() => Promise.resolve(mockProducts));
 	});
 
-	test('should get products array from database in the scheduled function', async () => {
-		scheduledGetProducts({}, { timestamp: new Date().toISOString() });
-		expect(productRepository.find).toBeCalledWith();
+	describe('scheduledGetProducts', () => {
+		test('should publish products to the topic from database', async () => {
+			await scheduledGetProducts({}, { timestamp: new Date().toISOString() });
+
+			expect(productRepository.find).toBeCalled();
+			expect(publishSpy).toBeCalled();
+		});
 	});
 
-	test('should get products array from database', async () => {
-		await getProducts(req, res);
-		expect(res.json).toBeCalledWith(mockProducts);
+	describe('getProducts', () => {
+		test('should publish products to the topic', async () => {
+			await getProducts(req, res);
+
+			expect(res.json).toBeCalledWith(mockProducts);
+			expect(publishSpy).toBeCalled();
+		});
+
+		test('should log exception', async () => {
+			logger.error = jest.fn();
+			jest
+				.spyOn(ProductsTopic.prototype, 'publish')
+				.mockResolvedValue(Promise.reject());
+
+			try {
+				await getProducts(req, res);
+			} catch {}
+
+			expect(logger.error).toBeCalled();
+		});
 	});
 });
