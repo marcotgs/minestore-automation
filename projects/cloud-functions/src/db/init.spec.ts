@@ -11,7 +11,7 @@ describe('db - init', () => {
 		const adminApp: Partial<app.App> = {
 			firestore: jest.fn(),
 		};
-		initFirestore(adminApp as app.App);
+		initFirestore(adminApp as any);
 
 		expect(adminApp.firestore).toHaveBeenCalled();
 		expect(initialize).toHaveBeenCalled();
