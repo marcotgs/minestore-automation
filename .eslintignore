@@ -5,3 +5,6 @@ node_modules
 */**/*.spec.*
 */**/*.test.*
 **/scripts/*.js
+**/*.js
+**/*.config.js
+**/*.config.*.js

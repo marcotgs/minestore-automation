@@ -1,0 +1,8 @@
+{
+  "version": "8.5.0",
+  "firestore": {
+    "version": "1.11.4",
+    "path": "firestore_export",
+    "metadata_file": "firestore_export/2021-04-04T16:08:50_36840/2021-04-04T16:08:50_36840.overall_export_metadata"
+  }
+}

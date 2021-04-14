@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "declaration": false,
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "strict": true,
+    "paths": {
+      "@db/*": ["./src/db/*"],
+      "@pubsub/*": ["./src/pubsub/*"]
+    }
+  },
+  "compileOnSave": true,
+  "include": ["src"]
+}
