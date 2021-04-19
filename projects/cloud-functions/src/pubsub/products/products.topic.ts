@@ -6,7 +6,7 @@ export class ProductsTopic {
 
 	private pubsub: PubSub;
 
-	private topicName = 'products';
+	public topicName = 'products';
 
 	constructor() {
 		const { projectId } = process.env.FIREBASE_CONFIG as any;
@@ -23,9 +23,7 @@ export class ProductsTopic {
 	}
 
 	public async publish(products: Product[]): Promise<void> {
-		const publishPromises = products.map((product) =>
-			this.topic.publishJSON({ id: product.id }),
-		);
+		const publishPromises = products.map((product) => this.topic.publishJSON({ id: product.id }));
 		await Promise.all(publishPromises);
 	}
 }

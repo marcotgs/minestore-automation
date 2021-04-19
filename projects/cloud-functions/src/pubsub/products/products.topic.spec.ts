@@ -32,13 +32,9 @@ describe('products.topic', () => {
 	});
 
 	test('should get topic when topic is already created', async () => {
-		jest
-			.spyOn(PubSub.prototype, 'createTopic')
-			.mockImplementation(() => Promise.reject());
+		jest.spyOn(PubSub.prototype, 'createTopic').mockImplementation(() => Promise.reject());
 
-		const topicSpy = jest
-			.spyOn(PubSub.prototype, 'topic')
-			.mockImplementation(() => mockTopic);
+		const topicSpy = jest.spyOn(PubSub.prototype, 'topic').mockImplementation(() => mockTopic);
 
 		await productsTopic.create();
 

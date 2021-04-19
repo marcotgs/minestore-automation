@@ -20,6 +20,7 @@
   },
   "scripts": {
     "postinstall": "husky install",
+    "format": "prettier  ./projects/**/*.ts --write",
     "lerna": "lerna",
     "lint": "eslint \"*/**/*.{js,ts}\" --quiet --fix",
     "test": "jest --watch --coverage -o --detectOpenHandles "

@@ -53,12 +53,7 @@ module.exports = (_env, argv) => {
 			extensions: ['.ts', '.tsx', '.js'],
 			plugins: [new TsconfigPathsPlugin()],
 		},
-		externals: [
-			nodeExternals(),
-			'firebase-admin',
-			'@firebase',
-			'@google-cloud/pubsub',
-		],
+		externals: [nodeExternals(), 'firebase-admin', '@firebase', '@google-cloud/pubsub'],
 		...(isDevelopment && customStats),
 	};
 };

@@ -25,7 +25,7 @@ export const scheduledGetProducts = region('southamerica-east1')
 export const getProducts = https.onRequest(async (_req, res) => {
 	try {
 		const products = await productRepository.find();
-		await productsTopic.publish(products);
+		await productsTopic.publish([products[0]]);
 		res.json(products);
 	} catch (ex) {
 		logger.error(`get products -> Error: ${ex}`, {

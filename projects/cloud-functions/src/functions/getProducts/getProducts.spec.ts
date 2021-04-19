@@ -38,9 +38,7 @@ describe('functions:getProducts', () => {
 
 		test('should log exception', async () => {
 			logger.error = jest.fn();
-			jest
-				.spyOn(ProductsTopic.prototype, 'publish')
-				.mockResolvedValue(Promise.reject());
+			jest.spyOn(ProductsTopic.prototype, 'publish').mockResolvedValue(Promise.reject());
 
 			try {
 				await getProducts(req, res);

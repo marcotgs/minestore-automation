@@ -11,7 +11,8 @@
     "strict": true,
     "paths": {
       "@db/*": ["./src/db/*"],
-      "@pubsub/*": ["./src/pubsub/*"]
+      "@pubsub/*": ["./src/pubsub/*"],
+      "@core/*": ["./src/core/*"]
     }
   },
   "compileOnSave": true,
