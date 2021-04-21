@@ -2,6 +2,7 @@
 
 var nodeExternals = require('webpack-node-externals');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
 
 const customStats = {
 	stats: {
@@ -53,6 +54,11 @@ module.exports = (_env, argv) => {
 			extensions: ['.ts', '.tsx', '.js'],
 			plugins: [new TsconfigPathsPlugin()],
 		},
+		plugins: [
+			new Dotenv({
+				path: `./config/environment/.env.${argv.mode}`,
+			}),
+		],
 		externals: [nodeExternals(), 'firebase-admin', '@firebase', '@google-cloud/pubsub'],
 		...(isDevelopment && customStats),
 	};

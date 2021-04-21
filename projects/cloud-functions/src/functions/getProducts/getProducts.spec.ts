@@ -1,8 +1,8 @@
 import { Request, logger } from 'firebase-functions';
-import { Product, productRepository } from '@db/products';
+import { Product, productRepository } from '@db/product';
 import { ProductsTopic } from '@pubsub/products';
 import { getProducts, scheduledGetProducts } from './getProducts';
-import { productsMocks } from '@db/__mocks__/products.mocks';
+import { productsMocks } from '@db/product/__mocks__/products';
 
 jest.mock('@pubsub/products');
 

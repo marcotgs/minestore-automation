@@ -1,4 +1,4 @@
-import { productsMocks } from '@db/__mocks__/products.mocks';
+import { productsMocks } from '@db/product/__mocks__/products';
 import { PubSub, Topic } from '@google-cloud/pubsub';
 import { ProductsTopic } from './products.topic';
 

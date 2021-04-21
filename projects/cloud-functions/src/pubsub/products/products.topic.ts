@@ -1,4 +1,4 @@
-import { Product } from '@db/products';
+import { Product } from '@db/product';
 import { PubSub, Topic } from '@google-cloud/pubsub';
 
 export class ProductsTopic {

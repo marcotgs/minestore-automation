@@ -28,7 +28,6 @@
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "firebase-functions-test": "^0.2.0",
-    "webpack-shell-plugin": "^0.5.0"
+    "firebase-functions-test": "^0.2.0"
   }
 }

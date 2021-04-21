@@ -1,5 +1,5 @@
 import { region, https, logger } from 'firebase-functions';
-import { productRepository } from '@db/products';
+import { productRepository } from '@db/product';
 import { ProductsTopic } from '@pubsub/products';
 
 const productsTopic = new ProductsTopic();
@@ -17,6 +17,7 @@ export const scheduledGetProducts = region('southamerica-east1')
 			logger.info(`get products - ${context.timestamp}`, {
 				structuredData: true,
 			});
+
 			const products = await productRepository.find();
 			await productsTopic.publish(products);
 		},

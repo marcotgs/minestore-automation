@@ -1,4 +1,5 @@
-import { Collection, getRepository } from 'fireorm';
+import { Collection, getRepository, ISubCollection, SubCollection } from 'fireorm';
+import { Stock } from './stock';
 
 export enum ProductStatus {
 	new = 'NEW',
@@ -11,17 +12,22 @@ export enum ProductStatus {
 export class Product {
 	id!: string;
 
-	minestore_id!: string;
+	minestoreId!: string;
 
 	name!: string;
 
-	supplier_url!: string;
+	supplierUrl!: string;
 
 	status!: ProductStatus;
 
-	created_date!: string;
+	createdDate!: string;
 
-	updated_date?: string;
+	updatedDate?: string;
+
+	quantity?: number;
+
+	@SubCollection(Stock, 'stock')
+	stock?: ISubCollection<Stock>;
 }
 
 export const productRepository = getRepository(Product);

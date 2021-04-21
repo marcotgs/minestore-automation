@@ -1,8 +1,8 @@
 import puppeteer, { Browser, Page } from 'puppeteer';
 
 interface PuppeteerConnection {
-	page: Page;
-	browser: Browser;
+	page?: Page;
+	browser?: Browser;
 }
 
 const PUPPETEER_OPTIONS = {
@@ -11,7 +11,6 @@ const PUPPETEER_OPTIONS = {
 		'--disable-gpu',
 		'--disable-dev-shm-usage',
 		'--disable-setuid-sandbox',
-		'--timeout=30000',
 		'--no-first-run',
 		'--no-sandbox',
 		'--no-zygote',
