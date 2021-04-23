@@ -10,7 +10,8 @@
     "experimentalDecorators": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "incremental": true
+    "incremental": true,
+    "lib": ["es2018", "dom"]
   },
   "exclude": ["node_modules", "src/testing/**.*", "src/___mocks___/**.*"]
 }

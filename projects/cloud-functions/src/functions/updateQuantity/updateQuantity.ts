@@ -12,11 +12,11 @@ export const updateQuantity = pubsub
 		const { page } = await openConnection();
 		const { supplierUrl, name } = await productRepository.findById(id);
 
-		await page.goto(supplierUrl, { waitUntil: 'load' });
+		await page?.goto(supplierUrl, { waitUntil: 'load' });
 		const inputQuantitySelector = '#input-quantity';
 
-		if (await page.$(inputQuantitySelector)) {
-			const quantity = await page.$eval('#input-quantity', (inputEl) =>
+		if (await page?.$(inputQuantitySelector)) {
+			const quantity = await page?.$eval('#input-quantity', (inputEl) =>
 				inputEl.getAttribute('max'),
 			);
 			logger.info(`${name}: ${quantity}`);

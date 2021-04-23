@@ -4,6 +4,7 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "resolveJsonModule": true,
+    "strictPropertyInitialization": false,
     "allowJs": true,
     "declaration": false,
     "outDir": "./dist",

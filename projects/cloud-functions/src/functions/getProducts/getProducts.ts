@@ -1,8 +1,11 @@
 import { region, https, logger } from 'firebase-functions';
 import { productRepository } from '@db/product';
 import { ProductsTopic } from '@pubsub/products';
+import { MinestoreLogin } from '@core/auth/minestore-login/minestore-login';
 
 const productsTopic = new ProductsTopic();
+const minestoreLogin = new MinestoreLogin();
+minestoreLogin.login();
 productsTopic.create();
 
 /**

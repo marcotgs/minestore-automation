@@ -1,6 +1,6 @@
 import puppeteer, { Browser, Page } from 'puppeteer';
 
-interface PuppeteerConnection {
+export interface PuppeteerConnection {
 	page?: Page;
 	browser?: Browser;
 }
