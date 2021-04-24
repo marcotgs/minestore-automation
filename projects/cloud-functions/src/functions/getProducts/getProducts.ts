@@ -1,11 +1,10 @@
 import { region, https, logger } from 'firebase-functions';
+
 import { productRepository } from '@db/product';
 import { ProductsTopic } from '@pubsub/products';
-import { MinestoreLogin } from '@core/auth/minestore-login/minestore-login';
+import { minestoreLogin } from '@core/auth';
 
 const productsTopic = new ProductsTopic();
-const minestoreLogin = new MinestoreLogin();
-minestoreLogin.login();
 productsTopic.create();
 
 /**
@@ -28,8 +27,9 @@ export const scheduledGetProducts = region('southamerica-east1')
 
 export const getProducts = https.onRequest(async (_req, res) => {
 	try {
+		const minestoreSession = await minestoreLogin.login();
 		const products = await productRepository.find();
-		await productsTopic.publish([products[0]]);
+		await productsTopic.publish([products[0]], minestoreSession);
 		res.json(products);
 	} catch (ex) {
 		logger.error(`get products -> Error: ${ex}`, {

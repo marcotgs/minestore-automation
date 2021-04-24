@@ -1,15 +1,19 @@
 import { pubsub, logger } from 'firebase-functions';
 import { ProductsTopic } from '@pubsub/products';
+
 import { productRepository } from '@db/product';
 import { openConnection } from '@core/puppeteer';
+import { MinestoreSessionData } from '@core/auth';
 
 const productTopic = new ProductsTopic();
+const connection = openConnection();
 
 export const updateQuantity = pubsub
 	.topic(productTopic.topicName)
-	.onPublish(async ({ json: { id } }) => {
+	.onPublish(async ({ json: { id, data } }) => {
+		const minestoreSession: MinestoreSessionData = data;
+		const { page } = await connection;
 		logger.info(`start updating quantity - product id: ${id}`);
-		const { page } = await openConnection();
 		const { supplierUrl, name } = await productRepository.findById(id);
 
 		await page?.goto(supplierUrl, { waitUntil: 'load' });

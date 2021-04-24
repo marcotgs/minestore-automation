@@ -2,16 +2,18 @@
 import { Page } from 'puppeteer';
 import { closeConnection, openConnection } from '@core/puppeteer';
 
-interface AuthenticationData {
+export interface MinestoreSessionData {
 	_session_id?: string;
 	authToken?: any;
 }
 
-export class MinestoreLogin {
-	public authData: AuthenticationData = {};
-
-	public async login(): Promise<void> {
+class MinestoreLogin {
+	public async login(): Promise<MinestoreSessionData> {
+		if (process.env.MINESTORE_SESSION_DEBUG) {
+			return JSON.parse(process.env.MINESTORE_SESSION_DEBUG);
+		}
 		const { page } = await openConnection();
+
 		try {
 			await page?.goto('https://anjosdoamorsexshop.minestore.com.br/admin/entrar', {
 				waitUntil: 'load',
@@ -19,7 +21,7 @@ export class MinestoreLogin {
 
 			await this.submitLoginForm(page as Page);
 			await page?.waitForSelector('nav[class*="main-nav"]'); // admin page was loaded
-			await this.getAuthData(page as Page);
+			return await this.getAuthData(page as Page);
 		} catch (e) {
 			throw new Error(e);
 		} finally {
@@ -27,22 +29,24 @@ export class MinestoreLogin {
 		}
 	}
 
-	private async getAuthData(page: Page): Promise<void> {
+	private async getAuthData(page: Page): Promise<MinestoreSessionData> {
 		const cookies = await page?.cookies();
-		this.authData._session_id = cookies?.find((cookie) => cookie.name === '_session_id')?.value;
-
-		this.authData.authToken = await page.evaluate(() => {
+		const sessionId = cookies?.find((cookie) => cookie.name === '_session_id')?.value;
+		const authToken = await page.evaluate(() => {
 			const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
 			return Promise.resolve(csrfToken);
 		});
+
+		return { authToken, _session_id: sessionId };
 	}
 
 	private async submitLoginForm(page: Page): Promise<void> {
-		const { MINESTORE_LOGIN_EMAIL, MINESTORE_LOGIN_PASSWORD } = process.env;
 		await page.focus('#user_email');
-		await page.keyboard.type(MINESTORE_LOGIN_EMAIL as string);
+		await page.keyboard.type(process.env.MINESTORE_LOGIN_EMAIL as string);
 		await page.focus('#user_password');
-		await page.keyboard.type(MINESTORE_LOGIN_PASSWORD as string);
+		await page.keyboard.type(process.env.MINESTORE_LOGIN_PASSWORD as string);
 		await page.click('.btn-login');
 	}
 }
+
+export const minestoreLogin = new MinestoreLogin();

@@ -22,8 +22,10 @@ export class ProductsTopic {
 		}
 	}
 
-	public async publish(products: Product[]): Promise<void> {
-		const publishPromises = products.map((product) => this.topic.publishJSON({ id: product.id }));
+	public async publish<T extends any>(products: Product[], data: T = {} as any): Promise<void> {
+		const publishPromises = products.map((product) =>
+			this.topic.publishJSON({ id: product.id, data }),
+		);
 		await Promise.all(publishPromises);
 	}
 }
