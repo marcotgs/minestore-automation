@@ -6,9 +6,9 @@ export enum StockType {
 export class Stock {
 	id!: string;
 
-	date!: string;
+	date: string;
 
-	quantity!: string;
+	quantity: number;
 
-	type!: StockType;
+	type?: StockType;
 }

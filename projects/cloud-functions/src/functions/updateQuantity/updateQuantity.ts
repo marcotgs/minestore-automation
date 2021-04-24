@@ -1,32 +1,69 @@
 import { pubsub, logger } from 'firebase-functions';
-import { ProductsTopic } from '@pubsub/products';
+import { firestore } from 'firebase-admin';
+import { Page } from 'puppeteer';
 
-import { productRepository } from '@db/product';
+import { ProductsTopic } from '@pubsub/products';
+import { Product, productRepository, ProductStatus, Stock, StockType } from '@db/product';
 import { openConnection } from '@core/puppeteer';
 import { MinestoreSessionData } from '@core/auth';
 
 const productTopic = new ProductsTopic();
 const connection = openConnection();
 
+async function getQuantity(page: Page): Promise<number> {
+	const inputQuantitySelector = '#input-quantity';
+	if (await page?.$(inputQuantitySelector)) {
+		return Number(
+			await page?.$eval(inputQuantitySelector, (inputEl) => inputEl.getAttribute('max')),
+		);
+	}
+	return 0; // sold out
+}
+
+async function updateStock({ stock, ...rest }: Product, quantitySupplier: number) {
+	const date = firestore.Timestamp.now().toDate().toString();
+	const stockUpdate: Partial<Stock> = { quantity: quantitySupplier, date, type: StockType.entry };
+	const productUpdate: Partial<Product> = {
+		quantity: quantitySupplier,
+		updatedDate: date,
+		status: ProductStatus.available,
+	};
+
+	if (!quantitySupplier) {
+		const lastRegisterStock = await stock?.orderByDescending('date').findOne();
+		stockUpdate.quantity = lastRegisterStock?.quantity ?? 0;
+		stockUpdate.type = StockType.out;
+		productUpdate.quantity = 0;
+		productUpdate.status = ProductStatus.sold_out;
+	}
+
+	productRepository.update({
+		...rest,
+		...productUpdate,
+	});
+	stock?.create(stockUpdate as Stock);
+}
+
 export const updateQuantity = pubsub
 	.topic(productTopic.topicName)
 	.onPublish(async ({ json: { id, data } }) => {
-		const minestoreSession: MinestoreSessionData = data;
 		const { page } = await connection;
-		logger.info(`start updating quantity - product id: ${id}`);
-		const { supplierUrl, name } = await productRepository.findById(id);
+		try {
+			const minestoreSession: MinestoreSessionData = data;
+			const product = await productRepository.findById(id);
+			const { supplierUrl, name } = product;
 
-		await page?.goto(supplierUrl, { waitUntil: 'load' });
-		const inputQuantitySelector = '#input-quantity';
+			await page?.goto(supplierUrl, { waitUntil: 'load' });
+			const quantity = await getQuantity(page as Page);
 
-		if (await page?.$(inputQuantitySelector)) {
-			const quantity = await page?.$eval('#input-quantity', (inputEl) =>
-				inputEl.getAttribute('max'),
-			);
-			logger.info(`${name}: ${quantity}`);
-		} else {
-			// TODO: get the quantity from the product and creates a out register with the same value, meaning products is sold out.
+			if (quantity !== product.quantity) {
+				await updateStock(product, quantity);
+				logger.info(`updated stock quantity - ${id} - ${name}: ${quantity}`);
+			}
+
+			return;
+		} catch (ex) {
+			logger.error(ex);
+			throw new Error(ex);
 		}
-
-		return null;
 	});

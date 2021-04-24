@@ -7,29 +7,34 @@ import { minestoreLogin } from '@core/auth';
 const productsTopic = new ProductsTopic();
 productsTopic.create();
 
+async function publishProductsTopic() {
+	const minestoreSession = await minestoreLogin.login();
+	// const products = await productRepository.find();
+	const products = await productRepository.whereEqualTo('minestoreId', '4412762').find();
+	await productsTopic.publish(products, minestoreSession);
+	return products;
+}
+
 /**
  * * Scheduled function that run on each hour.
  * * In order to run this function locally, please use `firebase shell` or call the standalone `getProducts` function.
  */
 export const scheduledGetProducts = region('southamerica-east1')
-	.pubsub.schedule('0 */1 * * *')
+	.pubsub.schedule('0 9-20 * * *')
 	.timeZone('America/Sao_Paulo')
 	.onRun(
 		async (context): Promise<void> => {
-			logger.info(`get products - ${context.timestamp}`, {
+			logger.info(`start executing scheduledGetProducts - ${context.timestamp}`, {
 				structuredData: true,
 			});
 
-			const products = await productRepository.find();
-			await productsTopic.publish(products);
+			await publishProductsTopic();
 		},
 	);
 
 export const getProducts = https.onRequest(async (_req, res) => {
 	try {
-		const minestoreSession = await minestoreLogin.login();
-		const products = await productRepository.find();
-		await productsTopic.publish([products[0]], minestoreSession);
+		const products = await publishProductsTopic();
 		res.json(products);
 	} catch (ex) {
 		logger.error(`get products -> Error: ${ex}`, {

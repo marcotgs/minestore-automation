@@ -7,7 +7,6 @@ export enum ProductStatus {
 	sold_out = 'SOLD_OUT',
 	synced_error = 'SYNCED_ERROR',
 }
-
 @Collection('products')
 export class Product {
 	id!: string;
@@ -18,9 +17,9 @@ export class Product {
 
 	supplierUrl!: string;
 
-	status!: ProductStatus;
+	status: ProductStatus;
 
-	createdDate!: string;
+	createdDate?: string;
 
 	updatedDate?: string;
 

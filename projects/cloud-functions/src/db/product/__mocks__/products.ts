@@ -1,4 +1,4 @@
-import { Product, ProductStatus } from '@db/product';
+import { Product, ProductStockStatus } from '@db/product';
 
 export const productsMocks: Product[] = [
 	{
@@ -7,7 +7,7 @@ export const productsMocks: Product[] = [
 		name: 'Sleek Steel Bike',
 		createdDate: 'Mon Apr 05 2021 07:04:09 GMT+0200 (Central European Summer Time)',
 		supplierUrl: 'http://raquel.net',
-		status: ProductStatus.new,
+		status: ProductStockStatus.new,
 	},
 	{
 		id: 'test2',
@@ -15,6 +15,6 @@ export const productsMocks: Product[] = [
 		name: 'Sleek Wooden Soap',
 		createdDate: 'Mon Apr 05 2021 07:04:09 GMT+0200 (Central European Summer Time)',
 		supplierUrl: 'http://lura.name',
-		status: ProductStatus.new,
+		status: ProductStockStatus.new,
 	},
 ];
