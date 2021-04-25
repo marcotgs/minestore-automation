@@ -4,6 +4,7 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "resolveJsonModule": true,
+    "strictPropertyInitialization": false,
     "allowJs": true,
     "declaration": false,
     "outDir": "./dist",
@@ -11,7 +12,8 @@
     "strict": true,
     "paths": {
       "@db/*": ["./src/db/*"],
-      "@pubsub/*": ["./src/pubsub/*"]
+      "@pubsub/*": ["./src/pubsub/*"],
+      "@core/*": ["./src/core/*"]
     }
   },
   "compileOnSave": true,

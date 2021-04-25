@@ -1,4 +1,4 @@
-import { Product } from '@db/products';
+import { Product } from '@db/product';
 import { PubSub, Topic } from '@google-cloud/pubsub';
 
 export class ProductsTopic {
@@ -6,7 +6,7 @@ export class ProductsTopic {
 
 	private pubsub: PubSub;
 
-	private topicName = 'products';
+	public topicName = 'products';
 
 	constructor() {
 		const { projectId } = process.env.FIREBASE_CONFIG as any;
@@ -22,9 +22,9 @@ export class ProductsTopic {
 		}
 	}
 
-	public async publish(products: Product[]): Promise<void> {
+	public async publish<T extends any>(products: Product[], data: T = {} as any): Promise<void> {
 		const publishPromises = products.map((product) =>
-			this.topic.publishJSON({ id: product.id }),
+			this.topic.publishJSON({ id: product.id, data }),
 		);
 		await Promise.all(publishPromises);
 	}
