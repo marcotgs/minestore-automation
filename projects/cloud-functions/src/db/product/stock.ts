@@ -1,3 +1,7 @@
+export enum StockSupplier {
+	star = 'star',
+}
+
 export enum StockType {
 	entry = 'ENTRY',
 	out = 'OUT',

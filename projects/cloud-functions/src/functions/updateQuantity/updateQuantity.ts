@@ -5,7 +5,7 @@ import { Page } from 'puppeteer';
 import { ProductsTopic } from '@pubsub/products';
 import { Product, productRepository, ProductStatus, Stock, StockType } from '@db/product';
 import { openConnection } from '@core/puppeteer';
-import { MinestoreSessionData } from '@core/auth';
+import { MinestoreStock } from '@core/minestore';
 
 const productTopic = new ProductsTopic();
 const connection = openConnection();
@@ -17,10 +17,14 @@ async function getQuantity(page: Page): Promise<number> {
 			await page?.$eval(inputQuantitySelector, (inputEl) => inputEl.getAttribute('max')),
 		);
 	}
+
 	return 0; // sold out
 }
 
-async function updateStock({ stock, ...rest }: Product, quantitySupplier: number) {
+async function updateStock(
+	{ stockStar, ...rest }: Product,
+	quantitySupplier: number,
+): Promise<Stock> {
 	const date = firestore.Timestamp.now().toDate().toString();
 	const stockUpdate: Partial<Stock> = { quantity: quantitySupplier, date, type: StockType.entry };
 	const productUpdate: Partial<Product> = {
@@ -30,7 +34,7 @@ async function updateStock({ stock, ...rest }: Product, quantitySupplier: number
 	};
 
 	if (!quantitySupplier) {
-		const lastRegisterStock = await stock?.orderByDescending('date').findOne();
+		const lastRegisterStock = await stockStar?.orderByDescending('date').findOne();
 		stockUpdate.quantity = lastRegisterStock?.quantity ?? 0;
 		stockUpdate.type = StockType.out;
 		productUpdate.quantity = 0;
@@ -41,29 +45,39 @@ async function updateStock({ stock, ...rest }: Product, quantitySupplier: number
 		...rest,
 		...productUpdate,
 	});
-	stock?.create(stockUpdate as Stock);
+	stockStar?.create(stockUpdate as Stock);
+	return stockUpdate as Stock;
 }
 
 export const updateQuantity = pubsub
 	.topic(productTopic.topicName)
-	.onPublish(async ({ json: { id, data } }) => {
+	.onPublish(async ({ json: { id, data: session } }) => {
 		const { page } = await connection;
+		const product = await productRepository.findById(id);
+
 		try {
-			const minestoreSession: MinestoreSessionData = data;
-			const product = await productRepository.findById(id);
+			const minestoreStock = new MinestoreStock(session, product);
 			const { supplierUrl, name } = product;
 
 			await page?.goto(supplierUrl, { waitUntil: 'load' });
 			const quantity = await getQuantity(page as Page);
 
 			if (quantity !== product.quantity) {
-				await updateStock(product, quantity);
+				const stockData = await updateStock(product, quantity);
+				await minestoreStock.updateStock(stockData);
 				logger.info(`updated stock quantity - ${id} - ${name}: ${quantity}`);
 			}
 
 			return;
 		} catch (ex) {
-			logger.error(ex);
-			throw new Error(ex);
+			const updatedDate = firestore.Timestamp.now().toDate().toString();
+			logger.error(`Product id: ${product.id} - message: ${ex.message}`);
+			productRepository.update({
+				...product,
+				status: ProductStatus.synced_error,
+				updatedDate,
+			});
+
+			throw ex;
 		}
 	});

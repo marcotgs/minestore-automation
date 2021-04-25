@@ -7,7 +7,7 @@ export interface MinestoreSessionData {
 	authToken?: any;
 }
 
-class MinestoreLogin {
+class MinestoreAuth {
 	public async login(): Promise<MinestoreSessionData> {
 		if (process.env.MINESTORE_SESSION_DEBUG) {
 			return JSON.parse(process.env.MINESTORE_SESSION_DEBUG);
@@ -15,7 +15,7 @@ class MinestoreLogin {
 		const { page } = await openConnection();
 
 		try {
-			await page?.goto('https://anjosdoamorsexshop.minestore.com.br/admin/entrar', {
+			await page?.goto(`${process.env.MINESTORE_BASE_URL}/entrar`, {
 				waitUntil: 'load',
 			});
 
@@ -49,4 +49,4 @@ class MinestoreLogin {
 	}
 }
 
-export const minestoreLogin = new MinestoreLogin();
+export const minestoreAuth = new MinestoreAuth();

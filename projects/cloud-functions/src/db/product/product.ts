@@ -1,5 +1,5 @@
 import { Collection, getRepository, ISubCollection, SubCollection } from 'fireorm';
-import { Stock } from './stock';
+import { Stock, StockSupplier } from './stock';
 
 export enum ProductStatus {
 	new = 'NEW',
@@ -25,8 +25,8 @@ export class Product {
 
 	quantity?: number;
 
-	@SubCollection(Stock, 'stock')
-	stock?: ISubCollection<Stock>;
+	@SubCollection(Stock, `stock-${StockSupplier.star}`)
+	stockStar?: ISubCollection<Stock>;
 }
 
 export const productRepository = getRepository(Product);

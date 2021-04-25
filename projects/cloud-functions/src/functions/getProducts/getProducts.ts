@@ -2,13 +2,13 @@ import { region, https, logger } from 'firebase-functions';
 
 import { productRepository } from '@db/product';
 import { ProductsTopic } from '@pubsub/products';
-import { minestoreLogin } from '@core/auth';
+import { minestoreAuth } from '@core/minestore';
 
 const productsTopic = new ProductsTopic();
 productsTopic.create();
 
 async function publishProductsTopic() {
-	const minestoreSession = await minestoreLogin.login();
+	const minestoreSession = await minestoreAuth.login();
 	// const products = await productRepository.find();
 	const products = await productRepository.whereEqualTo('minestoreId', '4412762').find();
 	await productsTopic.publish(products, minestoreSession);
