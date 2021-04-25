@@ -20,6 +20,8 @@ module.exports = {
 		'class-methods-use-this': 'off',
 		'react/react-in-jsx-scope': 'off',
 		'import/prefer-default-export': 'off',
+		'no-unused-vars': 'off',
+		'@typescript-eslint/no-unused-vars': ['error'],
 		'@typescript-eslint/no-useless-constructor': ['error'],
 		'@typescript-eslint/interface-name-prefix': 'off',
 		'@typescript-eslint/explicit-function-return-type': 'off',

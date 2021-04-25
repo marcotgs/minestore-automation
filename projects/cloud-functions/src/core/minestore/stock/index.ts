@@ -1,1 +1,1 @@
-export * from './stock';
+export * from './minestore-stock';
