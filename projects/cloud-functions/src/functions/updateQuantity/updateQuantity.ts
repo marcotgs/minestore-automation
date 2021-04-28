@@ -1,4 +1,4 @@
-import { pubsub, logger } from 'firebase-functions';
+import { config, logger, region } from 'firebase-functions';
 import { Page } from 'puppeteer';
 
 import { ProductsTopic } from '@pubsub/products';
@@ -20,8 +20,9 @@ async function getQuantity(page: Page): Promise<number> {
 	return 0; // sold out
 }
 
-export const updateQuantity = pubsub
-	.topic(productTopic.topicName)
+export const updateQuantity = region('southamerica-east1')
+	.runWith({ memory: '1GB' })
+	.pubsub.topic(productTopic.topicName)
 	.onPublish(async ({ json: { id, data: session } }) => {
 		const { page } = await connection;
 		const product = await productRepository.findById(id);
@@ -40,7 +41,8 @@ export const updateQuantity = pubsub
 
 			return;
 		} catch (ex) {
-			const updatedDate = new Date().toLocaleString('pt-br', { timeZone: process.env.TZ });
+			const { timezone: timeZone } = config().env;
+			const updatedDate = new Date().toLocaleString('pt-BR', { timeZone });
 			logger.error(`Product id: ${product.id} - message: ${ex.message}`);
 			productRepository.update({
 				...product,

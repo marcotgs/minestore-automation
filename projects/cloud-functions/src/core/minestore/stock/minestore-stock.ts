@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
+import { config } from 'firebase-functions';
 import { MinestoreSessionData } from '@core/minestore/auth';
 import { Product, productRepository, ProductStatus, Stock, StockType } from '@db/product';
 
@@ -15,9 +16,13 @@ export class MinestoreStock {
 	}
 
 	async updateStock(quantitySupplier: number): Promise<void> {
+		const {
+			timezone: timeZone,
+			minestore: { baseUrl },
+		} = config().env;
 		const { _session_id, authToken } = this.session;
 		const { minestoreId } = this.product;
-		const date = new Date().toLocaleString('pt-br', { timeZone: process.env.TZ });
+		const date = new Date().toLocaleString('pt-br', { timeZone });
 
 		const { type, quantity } = await this.updateProduct(quantitySupplier);
 
@@ -31,7 +36,7 @@ export class MinestoreStock {
 		params.append('commit', `registrar ${type === StockType.entry ? 'entrada' : 'saída'}`);
 
 		try {
-			await fetch(`${process.env.MINESTORE_BASE_URL}/estoques/${minestoreId}/movimentacoes/criar`, {
+			const response = await fetch(`${baseUrl}/estoques/${minestoreId}/movimentacoes/criar`, {
 				method: 'POST',
 				body: params,
 				headers: {
@@ -40,14 +45,18 @@ export class MinestoreStock {
 					Cookie: `_session_id=${_session_id};`,
 				},
 			});
+			if (!response.ok) {
+				throw new Error(await response.text());
+			}
 		} catch (ex) {
-			console.log(ex);
+			console.error(ex);
 		}
 	}
 
 	private async updateProduct(quantitySupplier: number): Promise<Stock> {
+		const { timezone: timeZone } = config().env;
 		const { stockStar, ...rest } = this.product;
-		const date = new Date().toLocaleString('pt-br', { timeZone: process.env.TZ });
+		const date = new Date().toLocaleString('pt-br', { timeZone });
 		const stockUpdate: Partial<Stock> = { quantity: quantitySupplier, date, type: StockType.entry };
 		const productUpdate: Partial<Product> = {
 			quantity: quantitySupplier,

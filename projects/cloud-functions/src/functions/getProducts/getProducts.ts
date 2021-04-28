@@ -1,4 +1,4 @@
-import { region, https, logger } from 'firebase-functions';
+import { region, logger } from 'firebase-functions';
 
 import { productRepository } from '@db/product';
 import { ProductsTopic } from '@pubsub/products';
@@ -19,27 +19,31 @@ async function publishProductsTopic() {
  * * Scheduled function that run on each hour.
  * * In order to run this function locally, please use `firebase shell` or call the standalone `getProducts` function.
  */
-export const scheduledGetProducts = region('southamerica-east1')
+export const getProducts = region('southamerica-east1')
+	.runWith({ memory: '1GB' })
 	.pubsub.schedule('0 9-20 * * *')
 	.timeZone('America/Sao_Paulo')
 	.onRun(
-		async (context): Promise<void> => {
+		async (context): Promise<any> => {
 			logger.info(`start executing scheduledGetProducts - ${context.timestamp}`, {
 				structuredData: true,
 			});
 
 			await publishProductsTopic();
+			return null;
 		},
 	);
 
-export const getProducts = https.onRequest(async (_req, res) => {
-	try {
-		const products = await publishProductsTopic();
-		res.json(products);
-	} catch (ex) {
-		logger.error(`get products -> Error: ${ex}`, {
-			structuredData: true,
-		});
-		throw new Error(ex);
-	}
-});
+export const getProductsOnce = region('southamerica-east1')
+	.runWith({ memory: '1GB' })
+	.https.onRequest(async (_req, res) => {
+		try {
+			const products = await publishProductsTopic();
+			res.json(products);
+		} catch (ex) {
+			logger.error(`get products -> Error: ${ex}`, {
+				structuredData: true,
+			});
+			throw new Error(ex);
+		}
+	});

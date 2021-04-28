@@ -1,8 +1,9 @@
 'use strict';
 
+const path = require('path');
 var nodeExternals = require('webpack-node-externals');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
-const Dotenv = require('dotenv-webpack');
+const CopyPlugin = require('copy-webpack-plugin');
 
 const customStats = {
 	stats: {
@@ -26,15 +27,14 @@ module.exports = (_env, argv) => {
 	const isDevelopment = argv.mode === 'development';
 	return {
 		entry: './src/main.ts',
-		target: 'node',
 		devtool: 'nosources-source-map',
 		output: {
 			filename: '[name].js',
 			sourceMapFilename: '[file].map',
-			libraryTarget: 'commonjs2',
+			libraryTarget: 'commonjs',
 		},
 		optimization: {
-			minimize: false,
+			minimize: !isDevelopment,
 		},
 		performance: {
 			hints: false,
@@ -51,15 +51,20 @@ module.exports = (_env, argv) => {
 			],
 		},
 		resolve: {
-			extensions: ['.ts', '.tsx', '.js'],
+			extensions: ['.ts', '.tsx'],
 			plugins: [new TsconfigPathsPlugin()],
 		},
 		plugins: [
-			new Dotenv({
-				path: `./config/environment/.env.${argv.mode}`,
+			new CopyPlugin({
+				patterns: [{ from: './package.json', to: '.' }],
 			}),
 		],
-		externals: [nodeExternals(), 'firebase-admin', '@firebase', '@google-cloud/pubsub'],
+		externalsPresets: { node: true },
+		externals: [
+			nodeExternals({
+				additionalModuleDirs: [path.resolve(__dirname, '../../node_modules')],
+			}),
+		],
 		...(isDevelopment && customStats),
 	};
 };
