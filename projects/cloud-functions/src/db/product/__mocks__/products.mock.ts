@@ -1,13 +1,13 @@
-import { Product, ProductStockStatus } from '@db/product';
+import { Product, ProductStatus } from '@db/product';
 
 export const productsMocks: Product[] = [
 	{
 		id: 'test',
-		minestoreId: '1212',
+		minestoreId: '4412762',
 		name: 'Sleek Steel Bike',
 		createdDate: 'Mon Apr 05 2021 07:04:09 GMT+0200 (Central European Summer Time)',
 		supplierUrl: 'http://raquel.net',
-		status: ProductStockStatus.new,
+		status: ProductStatus.new,
 	},
 	{
 		id: 'test2',
@@ -15,6 +15,6 @@ export const productsMocks: Product[] = [
 		name: 'Sleek Wooden Soap',
 		createdDate: 'Mon Apr 05 2021 07:04:09 GMT+0200 (Central European Summer Time)',
 		supplierUrl: 'http://lura.name',
-		status: ProductStockStatus.new,
+		status: ProductStatus.new,
 	},
 ];

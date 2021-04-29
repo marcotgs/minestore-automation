@@ -7,8 +7,7 @@ export interface MinestoreSessionData {
 	_session_id?: string;
 	authToken?: any;
 }
-
-class MinestoreAuth {
+export class MinestoreAuth {
 	public async login(): Promise<MinestoreSessionData> {
 		const {
 			minestore: { debugSession, baseUrl },
@@ -33,7 +32,7 @@ class MinestoreAuth {
 		}
 	}
 
-	private async getAuthData(page?: Page): Promise<MinestoreSessionData> {
+	protected async getAuthData(page?: Page): Promise<MinestoreSessionData> {
 		const cookies = await page?.cookies();
 		const sessionId = cookies?.find((cookie: any) => cookie.name === '_session_id')?.value;
 		const authToken = await page?.evaluate(() => {
@@ -44,7 +43,7 @@ class MinestoreAuth {
 		return { authToken, _session_id: sessionId };
 	}
 
-	private async submitLoginForm(page?: Page): Promise<void> {
+	protected async submitLoginForm(page?: Page): Promise<void> {
 		const {
 			minestore: { email, password },
 		} = config().env;

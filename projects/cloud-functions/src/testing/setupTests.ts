@@ -1,8 +1,10 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import firebaseTest from 'firebase-functions-test';
 import * as fireorm from 'fireorm';
+import { environment } from './environment';
 
 const firebaseInstance = firebaseTest();
+
 const mockFirestore: FirebaseFirestore.Firestore = {
 	collection: jest.fn(),
 	batch: jest.fn(),
@@ -18,6 +20,12 @@ const mockFirestore: FirebaseFirestore.Firestore = {
 };
 fireorm.initialize(mockFirestore);
 
-afterAll(() => {
+beforeEach(() => {
+	firebaseInstance.mockConfig({
+		env: environment,
+	});
+});
+
+afterEach(() => {
 	firebaseInstance.cleanup();
 });

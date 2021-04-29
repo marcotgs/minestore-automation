@@ -23,7 +23,7 @@
     "format": "prettier  ./projects/**/*.ts --write",
     "lerna": "lerna",
     "lint": "eslint \"*/**/*.{js,ts}\" --quiet --fix",
-    "test": "jest --watch --coverage -o --detectOpenHandles "
+    "test": "jest --watch --coverage"
   },
   "devDependencies": {
     "@commitlint/cli": "^12.0.1",

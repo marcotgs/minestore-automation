@@ -5,8 +5,6 @@ jest.mock('puppeteer');
 
 describe('Puppeteer config', () => {
 	const mockPage: Partial<Page> = {
-		setUserAgent: jest.fn(),
-		setViewport: jest.fn(),
 		close: jest.fn(),
 	};
 	const mockBrowser: Partial<Browser> = {
@@ -26,11 +24,7 @@ describe('Puppeteer config', () => {
 		expect(page).toEqual(mockPage);
 		expect(browser).toEqual(mockBrowser);
 		expect(mockBrowser.newPage).toBeCalled();
-		expect(mockPage.setUserAgent).toBeCalled();
-		expect(mockPage.setViewport).toBeCalled();
-		expect(puppeteer.launch).toHaveBeenCalledWith(
-			expect.objectContaining({ product: 'chrome', headless: true }),
-		);
+		expect(puppeteer.launch).toHaveBeenCalledWith(expect.objectContaining({ headless: true }));
 	});
 
 	test('should close connection', async () => {

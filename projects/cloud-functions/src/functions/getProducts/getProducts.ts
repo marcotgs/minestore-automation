@@ -9,8 +9,9 @@ productsTopic.create();
 
 async function publishProductsTopic() {
 	const minestoreSession = await minestoreAuth.login();
-	// const products = await productRepository.find();
-	const products = await productRepository.whereEqualTo('minestoreId', '4412762').find();
+	const products = (await productRepository.find()).filter(
+		({ minestoreId }) => minestoreId === '4412762',
+	);
 	await productsTopic.publish(products, minestoreSession);
 	return products;
 }
@@ -25,7 +26,7 @@ export const getProducts = region('southamerica-east1')
 	.timeZone('America/Sao_Paulo')
 	.onRun(
 		async (context): Promise<any> => {
-			logger.info(`start executing scheduledGetProducts - ${context.timestamp}`, {
+			logger.info(`start executing getProducts - ${context.timestamp}`, {
 				structuredData: true,
 			});
 
