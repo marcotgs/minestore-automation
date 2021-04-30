@@ -36,9 +36,11 @@ export const updateQuantity = region('southamerica-east1')
 
 			if (quantity !== product.quantity) {
 				await minestoreStock.updateStock(quantity);
-				logger.info(`updated stock quantity - ${id} - ${name}: ${quantity}`);
+				logger.info(`synced stock quantity - ${id} - ${name}: ${quantity}`);
+				return;
 			}
 
+			logger.info(`stock and supplier are even - ${id} - ${name}: ${quantity}`);
 			return;
 		} catch (ex) {
 			const { timezone: timeZone } = config().env;

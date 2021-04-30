@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
-import { config } from 'firebase-functions';
+import { config, logger } from 'firebase-functions';
 import { MinestoreSessionData } from '@core/minestore/auth';
 import { Product, productRepository, ProductStatus, Stock, StockType } from '@db/product';
 
@@ -24,7 +24,8 @@ export class MinestoreStock {
 		const { minestoreId } = this.product;
 		const date = new Date().toLocaleString('pt-br', { timeZone });
 
-		const { type, quantity } = await this.updateProduct(quantitySupplier);
+		const { type, quantity } = await this.createStock(quantitySupplier);
+		await this.updateProduct(quantitySupplier);
 
 		const params = new URLSearchParams();
 		params.append('utf8', '✓');
@@ -45,38 +46,44 @@ export class MinestoreStock {
 					Cookie: `_session_id=${_session_id};`,
 				},
 			});
+
 			if (!response.ok) {
 				throw new Error(await response.text());
 			}
 		} catch (ex) {
-			console.error(ex);
+			logger.error(`error when updating stock - ex: ${ex.message}`);
 		}
 	}
 
-	private async updateProduct(quantitySupplier: number): Promise<Stock> {
+	private async createStock(quantitySupplier: number): Promise<Stock> {
 		const { timezone: timeZone } = config().env;
-		const { stockStar, ...rest } = this.product;
+		const { stockStar, quantity } = this.product;
 		const date = new Date().toLocaleString('pt-br', { timeZone });
-		const stockUpdate: Partial<Stock> = { quantity: quantitySupplier, date, type: StockType.entry };
+		const stockQuantity = quantity ?? 0;
+		const stockDifferenceQuantity = Math.abs(stockQuantity - quantitySupplier);
+		const newStock: Partial<Stock> = { quantity: quantitySupplier, date, type: StockType.entry };
+
+		newStock.type = stockQuantity >= quantitySupplier ? StockType.out : StockType.entry;
+		newStock.quantity = stockDifferenceQuantity;
+		stockStar?.create(newStock as Stock);
+		return newStock as Stock;
+	}
+
+	private async updateProduct(quantitySupplier: number): Promise<void> {
+		const { timezone: timeZone } = config().env;
+		const date = new Date().toLocaleString('pt-br', { timeZone });
 		const productUpdate: Partial<Product> = {
 			quantity: quantitySupplier,
 			updatedDate: date,
 			status: ProductStatus.available,
 		};
 
-		if (!quantitySupplier) {
-			const lastRegisterStock = await stockStar?.orderByDescending('date').findOne();
-			stockUpdate.quantity = lastRegisterStock?.quantity ?? 0;
-			stockUpdate.type = StockType.out;
-			productUpdate.quantity = 0;
-			productUpdate.status = ProductStatus.sold_out;
-		}
-
+		productUpdate.quantity = quantitySupplier;
+		productUpdate.status = !quantitySupplier ? ProductStatus.sold_out : ProductStatus.available;
+		productUpdate.updatedDate = date;
 		productRepository.update({
-			...rest,
+			...this.product,
 			...productUpdate,
 		});
-		stockStar?.create(stockUpdate as Stock);
-		return stockUpdate as Stock;
 	}
 }
