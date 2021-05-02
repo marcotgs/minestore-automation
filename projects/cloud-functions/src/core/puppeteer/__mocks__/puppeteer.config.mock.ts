@@ -6,6 +6,8 @@ const mockKeyboard: Partial<Keyboard> = {
 };
 
 export const mockPage: Partial<Page> = {
+	$: jest.fn(),
+	$eval: jest.fn((_a, fn: any) => fn()),
 	close: jest.fn(),
 	goto: jest.fn(),
 	focus: jest.fn(),

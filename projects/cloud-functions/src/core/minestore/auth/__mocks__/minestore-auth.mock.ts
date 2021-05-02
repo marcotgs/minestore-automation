@@ -1,7 +1,7 @@
 import { MinestoreSessionData, MinestoreAuth } from '@core/minestore';
 
 export const mockSession: MinestoreSessionData = {
-	_session_id: 'test',
+	sessionId: 'test',
 	authToken: 'test-token',
 };
 

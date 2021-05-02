@@ -1,7 +1,7 @@
 import puppeteer, { Browser, Page } from 'puppeteer';
 
 export interface PuppeteerConnection {
-	page?: Page;
+	page: Page;
 	browser?: Browser;
 }
 

@@ -11,9 +11,9 @@ const connection = openConnection();
 
 async function getQuantity(page: Page): Promise<number> {
 	const inputQuantitySelector = '#input-quantity';
-	if (await page?.$(inputQuantitySelector)) {
+	if (await page.$(inputQuantitySelector)) {
 		return Number(
-			await page?.$eval(inputQuantitySelector, (inputEl) => inputEl.getAttribute('max')),
+			await page.$eval(inputQuantitySelector, (inputEl) => inputEl.getAttribute('max')),
 		);
 	}
 
@@ -31,8 +31,8 @@ export const updateQuantity = region('southamerica-east1')
 			const minestoreStock = new MinestoreStock(session, product);
 			const { supplierUrl, name } = product;
 
-			await page?.goto(supplierUrl, { waitUntil: 'load' });
-			const quantity = await getQuantity(page as Page);
+			await page.goto(supplierUrl, { waitUntil: 'load' });
+			const quantity = await getQuantity(page);
 
 			if (quantity !== product.quantity) {
 				await minestoreStock.updateStock(quantity);

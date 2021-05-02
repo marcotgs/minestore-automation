@@ -2,7 +2,7 @@
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { config, logger } from 'firebase-functions';
-import { MinestoreSessionData } from '@core/minestore/auth';
+import { MinestoreSessionData, SESSION_ID_KEY } from '@core/minestore/auth';
 import { Product, productRepository, ProductStatus, Stock, StockType } from '@db/product';
 
 export class MinestoreStock {
@@ -16,18 +16,21 @@ export class MinestoreStock {
 	}
 
 	async updateStock(quantitySupplier: number): Promise<void> {
+		const stock = await this.createStock(quantitySupplier);
+		await this.updateProduct(quantitySupplier);
+		await this.postUpdateMinestoreStock(stock);
+	}
+
+	protected async postUpdateMinestoreStock({ type, quantity }: Stock): Promise<void> {
 		const {
 			timezone: timeZone,
 			minestore: { baseUrl },
 		} = config().env;
-		const { _session_id, authToken } = this.session;
+		const { sessionId: _session_id, authToken } = this.session;
 		const { minestoreId } = this.product;
 		const date = new Date().toLocaleString('pt-br', { timeZone });
-
-		const { type, quantity } = await this.createStock(quantitySupplier);
-		await this.updateProduct(quantitySupplier);
-
 		const params = new URLSearchParams();
+
 		params.append('utf8', '✓');
 		params.append('inventory_movement[movement_type]', `${type === StockType.entry ? '98' : '99'}`);
 		params.append('inventory_movement[quantity]', String(quantity));
@@ -43,7 +46,7 @@ export class MinestoreStock {
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
 					'X-CSRF-Token': authToken,
-					Cookie: `_session_id=${_session_id};`,
+					Cookie: `${SESSION_ID_KEY}=${_session_id};`,
 				},
 			});
 
@@ -55,7 +58,7 @@ export class MinestoreStock {
 		}
 	}
 
-	private async createStock(quantitySupplier: number): Promise<Stock> {
+	protected async createStock(quantitySupplier: number): Promise<Stock> {
 		const { timezone: timeZone } = config().env;
 		const { stockStar, quantity } = this.product;
 		const date = new Date().toLocaleString('pt-br', { timeZone });
@@ -69,7 +72,7 @@ export class MinestoreStock {
 		return newStock as Stock;
 	}
 
-	private async updateProduct(quantitySupplier: number): Promise<void> {
+	protected async updateProduct(quantitySupplier: number): Promise<void> {
 		const { timezone: timeZone } = config().env;
 		const date = new Date().toLocaleString('pt-br', { timeZone });
 		const productUpdate: Partial<Product> = {

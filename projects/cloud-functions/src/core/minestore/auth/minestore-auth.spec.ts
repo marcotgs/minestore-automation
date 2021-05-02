@@ -1,4 +1,5 @@
 import { Page } from 'puppeteer';
+import firebaseTest from 'firebase-functions-test';
 
 import {
 	mockCloseConnection,
@@ -6,7 +7,7 @@ import {
 	mockPage,
 } from '@core/puppeteer/__mocks__/puppeteer.config.mock';
 import { mockSession } from './__mocks__/minestore-auth.mock';
-import { MinestoreAuth, MinestoreSessionData } from './minestore-auth';
+import { MinestoreAuth, MinestoreSessionData, SESSION_ID_KEY } from './minestore-auth';
 import { environment } from '@testing/environment';
 
 jest.mock('@core/puppeteer', () => ({
@@ -32,10 +33,17 @@ class TestMinestoreAuth extends MinestoreAuth {
 }
 
 describe('MinestoreAuth', () => {
+	const firebaseInstance = firebaseTest();
 	let testMinestoreAuth: TestMinestoreAuth;
 
 	beforeEach(() => {
 		testMinestoreAuth = new TestMinestoreAuth();
+	});
+
+	afterEach(() => {
+		firebaseInstance.mockConfig({
+			env: environment,
+		});
 	});
 
 	describe('login()', () => {
@@ -64,6 +72,25 @@ describe('MinestoreAuth', () => {
 			}
 		});
 
+		test('should use debugSession', async () => {
+			const debugSession: MinestoreSessionData = {
+				sessionId: 'test',
+				authToken: 'as',
+			};
+			firebaseInstance.mockConfig({
+				env: {
+					...environment,
+					minestore: {
+						debugSession: debugSession,
+					},
+				},
+			});
+
+			const sessionData = await testMinestoreAuth.login();
+
+			expect(sessionData).toEqual(debugSession);
+		});
+
 		describe('submitLoginForm()', () => {
 			test('should fill data and submit form', async () => {
 				const {
@@ -83,13 +110,13 @@ describe('MinestoreAuth', () => {
 
 		describe('getAuthData()', () => {
 			test('should get auth data in cookies and meta tags', async () => {
-				const { _session_id, authToken } = mockSession;
+				const { sessionId, authToken } = mockSession;
 				jest.spyOn(document, 'querySelector').mockReturnValue({
 					content: authToken,
 				} as HTMLMetaElement);
 				mockPage.cookies = jest
 					.fn()
-					.mockResolvedValue([{ name: '_session_id', value: _session_id }]);
+					.mockResolvedValue([{ name: SESSION_ID_KEY, value: sessionId }]);
 
 				const session = await testMinestoreAuth.testGetAuthData();
 

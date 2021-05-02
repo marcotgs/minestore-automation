@@ -7,6 +7,7 @@ export const productsMocks: Product[] = [
 		name: 'Sleek Steel Bike',
 		createdDate: 'Mon Apr 05 2021 07:04:09 GMT+0200 (Central European Summer Time)',
 		supplierUrl: 'http://raquel.net',
+		quantity: 2,
 		status: ProductStatus.new,
 	},
 	{

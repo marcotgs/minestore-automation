@@ -26,6 +26,6 @@ beforeEach(() => {
 	});
 });
 
-afterEach(() => {
-	firebaseInstance.cleanup();
+afterEach(async () => {
+	await firebaseInstance.cleanup();
 });
