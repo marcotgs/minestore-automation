@@ -13,7 +13,8 @@
     "paths": {
       "@db/*": ["./src/db/*"],
       "@pubsub/*": ["./src/pubsub/*"],
-      "@core/*": ["./src/core/*"]
+      "@core/*": ["./src/core/*"],
+      "@testing/*": ["./src/testing/*"]
     }
   },
   "compileOnSave": true,

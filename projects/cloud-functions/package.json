@@ -1,18 +1,21 @@
 {
   "name": "@minestore/cloud-functions",
   "version": "1.0.0",
-  "main": "dist/main.js",
+  "main": "main.js",
   "private": true,
   "scripts": {
     "clean": "rimraf dist",
-    "build": "yarn clean && webpack --mode=production",
+    "config:set:dev": "node set-config dev",
+    "config:set:prod": "node set-config prod",
+    "deploy": "yarn config:set:prod && firebase deploy --only functions",
     "build:dev": "yarn clean && webpack --mode=development",
-    "start": "yarn clean && yarn build:dev && concurrently -k \"yarn:start:*\" ",
-    "start:dev": "webpack --watch --mode=development",
-    "start:emulator": "firebase emulators:start --import ./config/seed-data",
+    "build:prod": "yarn clean && webpack --mode=production",
+    "start": "yarn build:dev && yarn config:set:dev && concurrently -k \"yarn:watch\" \"yarn:emulator\" ",
+    "watch": "webpack --watch --mode=development",
     "shell": "firebase functions:shell",
+    "emulator": "firebase emulators:start --import ./config/seed-data",
     "test": "jest --watch --coverage -o",
-    "deploy": "firebase deploy --only functions",
+    "test:prod": "jest --watchAll=false --coverage",
     "logs": "firebase functions:log"
   },
   "engines": {
@@ -25,7 +28,7 @@
     "firebase-functions": "^3.13.0",
     "fireorm": "^0.20.0",
     "node-fetch": "^2.6.1",
-    "puppeteer": "^8.0.0",
+    "puppeteer": "^9.0.0",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
-import { MinestoreSessionData } from '@core/minestore/auth';
+import { config, logger } from 'firebase-functions';
+import { MinestoreSessionData, SESSION_ID_KEY } from '@core/minestore/auth';
 import { Product, productRepository, ProductStatus, Stock, StockType } from '@db/product';
 
 export class MinestoreStock {
@@ -15,13 +16,21 @@ export class MinestoreStock {
 	}
 
 	async updateStock(quantitySupplier: number): Promise<void> {
-		const { _session_id, authToken } = this.session;
+		const stock = await this.createStock(quantitySupplier);
+		await this.updateProduct(quantitySupplier);
+		await this.postUpdateMinestoreStock(stock);
+	}
+
+	protected async postUpdateMinestoreStock({ type, quantity }: Stock): Promise<void> {
+		const {
+			timezone: timeZone,
+			minestore: { baseUrl },
+		} = config().env;
+		const { sessionId: _session_id, authToken } = this.session;
 		const { minestoreId } = this.product;
-		const date = new Date().toLocaleString('pt-br', { timeZone: process.env.TZ });
-
-		const { type, quantity } = await this.updateProduct(quantitySupplier);
-
+		const date = new Date().toLocaleString('pt-br', { timeZone });
 		const params = new URLSearchParams();
+
 		params.append('utf8', '✓');
 		params.append('inventory_movement[movement_type]', `${type === StockType.entry ? '98' : '99'}`);
 		params.append('inventory_movement[quantity]', String(quantity));
@@ -31,43 +40,53 @@ export class MinestoreStock {
 		params.append('commit', `registrar ${type === StockType.entry ? 'entrada' : 'saída'}`);
 
 		try {
-			await fetch(`${process.env.MINESTORE_BASE_URL}/estoques/${minestoreId}/movimentacoes/criar`, {
+			const response = await fetch(`${baseUrl}/estoques/${minestoreId}/movimentacoes/criar`, {
 				method: 'POST',
 				body: params,
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
 					'X-CSRF-Token': authToken,
-					Cookie: `_session_id=${_session_id};`,
+					Cookie: `${SESSION_ID_KEY}=${_session_id};`,
 				},
 			});
+
+			if (!response.ok) {
+				throw new Error(await response.text());
+			}
 		} catch (ex) {
-			console.log(ex);
+			logger.error(`error when updating stock - ex: ${ex.message}`);
 		}
 	}
 
-	private async updateProduct(quantitySupplier: number): Promise<Stock> {
-		const { stockStar, ...rest } = this.product;
-		const date = new Date().toLocaleString('pt-br', { timeZone: process.env.TZ });
-		const stockUpdate: Partial<Stock> = { quantity: quantitySupplier, date, type: StockType.entry };
+	protected async createStock(quantitySupplier: number): Promise<Stock> {
+		const { timezone: timeZone } = config().env;
+		const { stockStar, quantity } = this.product;
+		const date = new Date().toLocaleString('pt-br', { timeZone });
+		const stockQuantity = quantity ?? 0;
+		const stockDifferenceQuantity = Math.abs(stockQuantity - quantitySupplier);
+		const newStock: Partial<Stock> = { quantity: quantitySupplier, date, type: StockType.entry };
+
+		newStock.type = stockQuantity >= quantitySupplier ? StockType.out : StockType.entry;
+		newStock.quantity = stockDifferenceQuantity;
+		stockStar?.create(newStock as Stock);
+		return newStock as Stock;
+	}
+
+	protected async updateProduct(quantitySupplier: number): Promise<void> {
+		const { timezone: timeZone } = config().env;
+		const date = new Date().toLocaleString('pt-br', { timeZone });
 		const productUpdate: Partial<Product> = {
 			quantity: quantitySupplier,
 			updatedDate: date,
 			status: ProductStatus.available,
 		};
 
-		if (!quantitySupplier) {
-			const lastRegisterStock = await stockStar?.orderByDescending('date').findOne();
-			stockUpdate.quantity = lastRegisterStock?.quantity ?? 0;
-			stockUpdate.type = StockType.out;
-			productUpdate.quantity = 0;
-			productUpdate.status = ProductStatus.sold_out;
-		}
-
+		productUpdate.quantity = quantitySupplier;
+		productUpdate.status = !quantitySupplier ? ProductStatus.sold_out : ProductStatus.available;
+		productUpdate.updatedDate = date;
 		productRepository.update({
-			...rest,
+			...this.product,
 			...productUpdate,
 		});
-		stockStar?.create(stockUpdate as Stock);
-		return stockUpdate as Stock;
 	}
 }

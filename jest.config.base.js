@@ -27,5 +27,5 @@ module.exports = {
 	moduleFileExtensions: ['js', 'json', 'jsx', 'ts', 'tsx', 'node'],
 
 	// The test environment that will be used for testing
-	testEnvironment: 'node',
+	testEnvironment: 'jsdom',
 };

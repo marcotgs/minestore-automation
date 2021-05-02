@@ -73,8 +73,12 @@ yarn-error.log*
 *.eslintcache
 .env
 .env.*
-!.env.example
+!.env.sample
+!.env.sample.*
 
 typings/
 
 **/coverage
+
+
+**/.runtimeconfig.json

@@ -1,4 +1,4 @@
-import { pubsub, logger } from 'firebase-functions';
+import { config, logger, region } from 'firebase-functions';
 import { Page } from 'puppeteer';
 
 import { ProductsTopic } from '@pubsub/products';
@@ -11,17 +11,18 @@ const connection = openConnection();
 
 async function getQuantity(page: Page): Promise<number> {
 	const inputQuantitySelector = '#input-quantity';
-	if (await page?.$(inputQuantitySelector)) {
+	if (await page.$(inputQuantitySelector)) {
 		return Number(
-			await page?.$eval(inputQuantitySelector, (inputEl) => inputEl.getAttribute('max')),
+			await page.$eval(inputQuantitySelector, (inputEl) => inputEl.getAttribute('max')),
 		);
 	}
 
 	return 0; // sold out
 }
 
-export const updateQuantity = pubsub
-	.topic(productTopic.topicName)
+export const updateQuantity = region('southamerica-east1')
+	.runWith({ memory: '1GB' })
+	.pubsub.topic(productTopic.topicName)
 	.onPublish(async ({ json: { id, data: session } }) => {
 		const { page } = await connection;
 		const product = await productRepository.findById(id);
@@ -30,17 +31,20 @@ export const updateQuantity = pubsub
 			const minestoreStock = new MinestoreStock(session, product);
 			const { supplierUrl, name } = product;
 
-			await page?.goto(supplierUrl, { waitUntil: 'load' });
-			const quantity = await getQuantity(page as Page);
+			await page.goto(supplierUrl, { waitUntil: 'load' });
+			const quantity = await getQuantity(page);
 
 			if (quantity !== product.quantity) {
 				await minestoreStock.updateStock(quantity);
-				logger.info(`updated stock quantity - ${id} - ${name}: ${quantity}`);
+				logger.info(`synced stock quantity - ${id} - ${name}: ${quantity}`);
+				return;
 			}
 
+			logger.info(`stock and supplier are even - ${id} - ${name}: ${quantity}`);
 			return;
 		} catch (ex) {
-			const updatedDate = new Date().toLocaleString('pt-br', { timeZone: process.env.TZ });
+			const { timezone: timeZone } = config().env;
+			const updatedDate = new Date().toLocaleString('pt-BR', { timeZone });
 			logger.error(`Product id: ${product.id} - message: ${ex.message}`);
 			productRepository.update({
 				...product,

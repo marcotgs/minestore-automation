@@ -1,27 +1,31 @@
-/* eslint-disable no-underscore-dangle */
 import { Page } from 'puppeteer';
+import { config } from 'firebase-functions';
 import { closeConnection, openConnection } from '@core/puppeteer';
 
+export const SESSION_ID_KEY = '_session_id';
+
 export interface MinestoreSessionData {
-	_session_id?: string;
+	sessionId?: string;
 	authToken?: any;
 }
-
-class MinestoreAuth {
+export class MinestoreAuth {
 	public async login(): Promise<MinestoreSessionData> {
-		if (process.env.MINESTORE_SESSION_DEBUG) {
-			return JSON.parse(process.env.MINESTORE_SESSION_DEBUG);
-		}
+		const {
+			minestore: { debugSession, baseUrl },
+		} = config().env;
+
+		if (debugSession) return debugSession;
+
 		const { page } = await openConnection();
 
 		try {
-			await page?.goto(`${process.env.MINESTORE_BASE_URL}/entrar`, {
+			await page.goto(`${baseUrl}/entrar`, {
 				waitUntil: 'load',
 			});
 
-			await this.submitLoginForm(page as Page);
-			await page?.waitForSelector('nav[class*="main-nav"]'); // admin page was loaded
-			return await this.getAuthData(page as Page);
+			await this.submitLoginForm(page);
+			await page.waitForSelector('nav[class*="main-nav"]'); // admin page was loaded
+			return await this.getAuthData(page);
 		} catch (e) {
 			throw new Error(e);
 		} finally {
@@ -29,22 +33,26 @@ class MinestoreAuth {
 		}
 	}
 
-	private async getAuthData(page: Page): Promise<MinestoreSessionData> {
-		const cookies = await page?.cookies();
-		const sessionId = cookies?.find((cookie) => cookie.name === '_session_id')?.value;
+	protected async getAuthData(page: Page): Promise<MinestoreSessionData> {
+		const cookies = await page.cookies();
+		const sessionId = cookies.find((cookie: any) => cookie.name === SESSION_ID_KEY)?.value;
 		const authToken = await page.evaluate(() => {
 			const csrfToken = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content;
 			return Promise.resolve(csrfToken);
 		});
 
-		return { authToken, _session_id: sessionId };
+		return { authToken, sessionId };
 	}
 
-	private async submitLoginForm(page: Page): Promise<void> {
+	protected async submitLoginForm(page: Page): Promise<void> {
+		const {
+			minestore: { email, password },
+		} = config().env;
+
 		await page.focus('#user_email');
-		await page.keyboard.type(process.env.MINESTORE_LOGIN_EMAIL as string);
+		await page.keyboard.type(email);
 		await page.focus('#user_password');
-		await page.keyboard.type(process.env.MINESTORE_LOGIN_PASSWORD as string);
+		await page.keyboard.type(password);
 		await page.click('.btn-login');
 	}
 }

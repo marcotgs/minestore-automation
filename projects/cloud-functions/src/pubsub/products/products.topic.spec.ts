@@ -1,16 +1,25 @@
-import { productsMocks } from '@db/product/__mocks__/products';
 import { PubSub, Topic } from '@google-cloud/pubsub';
+
+import { productsMocks } from '@db/product/__mocks__/products.mock';
+import { MinestoreAuthMock } from '@core/minestore/auth/__mocks__/minestore-auth.mock';
+import { MinestoreSessionData } from '@core/minestore/auth';
 import { ProductsTopic } from './products.topic';
 
 jest.mock('@google-cloud/pubsub');
 
 describe('products.topic', () => {
+	const minestoreAuthMock = new MinestoreAuthMock();
+	let mockSession: MinestoreSessionData;
 	let productsTopic: ProductsTopic;
 	const topicName = 'products';
 	const projectId = 'test';
 	const mockTopic = new Topic(new PubSub({ projectId }), 'test');
+	const topicJsonSpy = jest
+		.spyOn(Topic.prototype, 'publishJSON')
+		.mockImplementation(() => Promise.resolve());
 
-	beforeEach(() => {
+	beforeEach(async () => {
+		mockSession = await minestoreAuthMock.login();
 		process.env = {
 			FIREBASE_CONFIG: { projectId } as any,
 		};
@@ -44,10 +53,6 @@ describe('products.topic', () => {
 	test('should publish items to the topic', async () => {
 		(productsTopic as any).topic = mockTopic;
 
-		const topicJsonSpy = jest
-			.spyOn(Topic.prototype, 'publishJSON')
-			.mockImplementation(() => Promise.resolve());
-
 		await productsTopic.publish(productsMocks);
 
 		expect(topicJsonSpy).toBeCalledTimes(2);
@@ -55,6 +60,23 @@ describe('products.topic', () => {
 			productsMocks.map(({ id }) => [
 				{
 					id,
+					data: {},
+				},
+			]),
+		);
+	});
+
+	test('should publish items with extra data to the topic', async () => {
+		(productsTopic as any).topic = mockTopic;
+
+		await productsTopic.publish(productsMocks, mockSession);
+
+		expect(topicJsonSpy).toBeCalledTimes(2);
+		expect(topicJsonSpy.mock.calls).toEqual(
+			productsMocks.map(({ id }) => [
+				{
+					id,
+					data: mockSession,
 				},
 			]),
 		);
