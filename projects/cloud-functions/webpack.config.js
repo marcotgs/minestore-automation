@@ -42,16 +42,13 @@ module.exports = (_env, argv) => {
 		module: {
 			rules: [
 				{
-					test: /\.tsx?$/,
+					test: /\.ts?$/,
 					loader: 'ts-loader',
-					options: {
-						transpileOnly: true,
-					},
 				},
 			],
 		},
 		resolve: {
-			extensions: ['.ts', '.tsx'],
+			extensions: ['.ts'],
 			plugins: [new TsconfigPathsPlugin()],
 		},
 		plugins: [
