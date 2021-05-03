@@ -27,7 +27,7 @@ class TestMinestoreStock extends MinestoreStock {
 	}
 
 	async testUpdateProduct(quantitySupplier: number): Promise<void> {
-		await super.updateProduct(quantitySupplier);
+		await super.updateVariation(quantitySupplier);
 	}
 }
 
@@ -64,7 +64,7 @@ describe('MinestoreStock', () => {
 			} = environment;
 			const { minestoreId } = mockProduct;
 
-			await testMinestoreStock.updateStock(2);
+			await testMinestoreStock.updateVariationStock(2);
 
 			expect(productRepository.update).toBeCalled();
 			expect(stockStar.create).toBeCalled();
@@ -86,7 +86,7 @@ describe('MinestoreStock', () => {
 			(fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce(response as Response);
 
 			try {
-				await testMinestoreStock.updateStock(2);
+				await testMinestoreStock.updateVariationStock(2);
 			} catch (ex) {
 				expect(ex.message).toBe(textResponse);
 				expect(logger.error).toBeCalled();

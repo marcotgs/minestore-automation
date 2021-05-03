@@ -1,6 +1,6 @@
 import { region, logger } from 'firebase-functions';
 
-import { productRepository } from '@db/product';
+import { Product, productRepository } from '@db/product';
 import { ProductsTopic } from '@core/pubsub/products-topic';
 import { minestoreAuth } from '@core/minestore';
 
@@ -9,7 +9,14 @@ productsTopic.create();
 
 async function publishProductsTopic() {
 	const minestoreSession = await minestoreAuth.login();
-	const products = await productRepository.find();
+	let products: Product[] = [];
+
+	if (process.env.NODE_ENV !== 'production') {
+		products = await productRepository.whereEqualTo('minestoreId', 'produto-teste').find();
+	} else {
+		products = await productRepository.find();
+	}
+
 	await productsTopic.publish(products, minestoreSession);
 	return products;
 }

@@ -30,7 +30,7 @@ import { updateQuantity } from './updateQuantity';
 
 describe('updateQuantity', () => {
 	beforeEach(() => {
-		MinestoreStock.prototype.updateStock = jest.fn();
+		MinestoreStock.prototype.updateVariationStock = jest.fn();
 		productRepository.findById = jest.fn().mockResolvedValue(productsMocks[0]);
 		productRepository.update = jest.fn();
 	});
@@ -47,7 +47,7 @@ describe('updateQuantity', () => {
 			waitUntil: 'load',
 		});
 
-		expect(MinestoreStock.prototype.updateStock).toBeCalledWith(quantity);
+		expect(MinestoreStock.prototype.updateVariationStock).toBeCalledWith(quantity);
 	});
 
 	test('should update stock when product on supplier is sold out', async () => {
@@ -59,7 +59,7 @@ describe('updateQuantity', () => {
 			waitUntil: 'load',
 		});
 
-		expect(MinestoreStock.prototype.updateStock).toBeCalledWith(0);
+		expect(MinestoreStock.prototype.updateVariationStock).toBeCalledWith(0);
 	});
 
 	test(`shouldn't update stock when product has the same quantity as the supplier`, async () => {
@@ -70,7 +70,7 @@ describe('updateQuantity', () => {
 
 		await updateQuantity(message, {});
 
-		expect(MinestoreStock.prototype.updateStock).not.toHaveBeenCalled();
+		expect(MinestoreStock.prototype.updateVariationStock).not.toHaveBeenCalled();
 	});
 
 	test(`should update product when an error was thrown`, async () => {
@@ -82,7 +82,7 @@ describe('updateQuantity', () => {
 			await updateQuantity(message, {});
 		} catch {}
 
-		expect(MinestoreStock.prototype.updateStock).not.toHaveBeenCalled();
+		expect(MinestoreStock.prototype.updateVariationStock).not.toHaveBeenCalled();
 		expect(productRepository.update).toHaveBeenCalledWith(
 			expect.objectContaining({ status: ProductStatus.synced_error }),
 		);
