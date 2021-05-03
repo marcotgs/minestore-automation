@@ -11,7 +11,6 @@
     "strict": true,
     "paths": {
       "@db/*": ["./src/db/*"],
-      "@pubsub/*": ["./src/pubsub/*"],
       "@core/*": ["./src/core/*"],
       "@testing/*": ["./src/testing/*"]
     }

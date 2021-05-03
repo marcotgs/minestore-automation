@@ -1,7 +1,7 @@
 import { config, logger, region } from 'firebase-functions';
 import { Page } from 'puppeteer';
 
-import { ProductsTopic } from '@pubsub/products';
+import { ProductsTopic } from '@core/pubsub/products-topic';
 import { productRepository, ProductStatus } from '@db/product';
 import { openConnection } from '@core/puppeteer';
 import { MinestoreStock } from '@core/minestore';
@@ -31,7 +31,7 @@ export const updateQuantity = region('southamerica-east1')
 			const minestoreStock = new MinestoreStock(session, product);
 			const { supplierUrl, name } = product;
 
-			await page.goto(supplierUrl, { waitUntil: 'load' });
+			await page.goto(supplierUrl, { waitUntil: 'domcontentloaded' });
 			const quantity = await getQuantity(page);
 
 			if (quantity !== product.quantity) {

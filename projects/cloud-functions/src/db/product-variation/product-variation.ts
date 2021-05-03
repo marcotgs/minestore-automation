@@ -1,4 +1,4 @@
-import { Collection, ISubCollection, SubCollection } from 'fireorm';
+import { ISubCollection, SubCollection } from 'fireorm';
 
 import { DateFields } from '@db/base/date-fields';
 import { Stock, StockSupplier } from './stock';
@@ -10,7 +10,6 @@ export enum ProductVariationStatus {
 	synced_error = 'SYNCED_ERROR',
 }
 
-@Collection('variations')
 export class ProductVariation extends DateFields {
 	id!: string;
 

@@ -1,11 +1,11 @@
 import { Request, logger } from 'firebase-functions';
 import { Product, productRepository } from '@db/product';
-import { ProductsTopic } from '@pubsub/products';
+import { ProductsTopic } from '@core/pubsub/products-topic';
 import { getProducts, getProductsOnce } from './getProducts';
 import { minestoreAuth } from '@core/minestore';
 import { productsMocks } from '@db/product/__mocks__/products.mock';
 
-jest.mock('@pubsub/products');
+jest.mock('@core/pubsub');
 jest.mock('@core/minestore');
 
 describe('functions:getProducts', () => {

@@ -3,7 +3,7 @@ import { PubSub, Topic } from '@google-cloud/pubsub';
 import { productsMocks } from '@db/product/__mocks__/products.mock';
 import { MinestoreAuthMock } from '@core/minestore/auth/__mocks__/minestore-auth.mock';
 import { MinestoreSessionData } from '@core/minestore/auth';
-import { ProductsTopic } from './products-variations';
+import { ProductsTopic } from './products.topic';
 
 jest.mock('@google-cloud/pubsub');
 

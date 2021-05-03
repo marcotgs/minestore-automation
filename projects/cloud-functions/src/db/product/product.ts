@@ -1,7 +1,7 @@
 import { Collection, getRepository, ISubCollection, SubCollection } from 'fireorm';
 
 import { DateFields } from '@db/base/date-fields';
-import { ProductVariation } from '../product-variation/product-variation';
+import { ProductVariation } from '@db/product-variation';
 
 @Collection('products')
 export class Product extends DateFields {
