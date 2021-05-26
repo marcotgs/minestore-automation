@@ -19,7 +19,7 @@ describe('products.topic', () => {
 		.mockImplementation(() => Promise.resolve());
 
 	beforeEach(async () => {
-		mockSession = await minestoreAuthMock.login();
+		mockSession = await minestoreAuthMock.loginOnce();
 		process.env = {
 			FIREBASE_CONFIG: { projectId } as any,
 		};
