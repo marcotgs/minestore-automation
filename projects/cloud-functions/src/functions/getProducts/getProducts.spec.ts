@@ -16,7 +16,7 @@ describe('functions:getProducts', () => {
 	const mockProducts: Product[] = [productsMocks[0]];
 
 	beforeAll(() => {
-		minestoreAuth.login = jest.fn().mockReturnValue(Promise.resolve());
+		minestoreAuth.loginOnce = jest.fn().mockReturnValue(Promise.resolve());
 		productRepository.find = jest
 			.fn<Promise<Product[]>, any[]>()
 			.mockImplementation(() => Promise.resolve(mockProducts));
@@ -27,7 +27,7 @@ describe('functions:getProducts', () => {
 			await getProducts({}, { timestamp: new Date().toISOString() });
 
 			expect(productRepository.find).toBeCalled();
-			expect(minestoreAuth.login).toBeCalled();
+			expect(minestoreAuth.loginOnce).toBeCalled();
 			expect(publishSpy).toBeCalled();
 		});
 	});
@@ -37,7 +37,7 @@ describe('functions:getProducts', () => {
 			await getProductsOnce(req, res);
 
 			expect(res.json).toBeCalledWith(mockProducts);
-			expect(minestoreAuth.login).toBeCalled();
+			expect(minestoreAuth.loginOnce).toBeCalled();
 			expect(publishSpy).toBeCalled();
 		});
 

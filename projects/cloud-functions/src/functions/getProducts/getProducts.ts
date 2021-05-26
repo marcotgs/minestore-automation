@@ -8,7 +8,7 @@ const productsTopic = new ProductsTopic();
 productsTopic.create();
 
 async function publishProductsTopic() {
-	const minestoreSession = await minestoreAuth.login();
+	const minestoreSession = await minestoreAuth.loginOnce();
 	let products: Product[] = [];
 
 	if (process.env.NODE_ENV !== 'production') {

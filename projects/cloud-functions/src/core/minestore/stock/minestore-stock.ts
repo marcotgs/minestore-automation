@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import fetch from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { config, logger } from 'firebase-functions';
@@ -47,7 +46,7 @@ export class MinestoreStock {
 			timezone: timeZone,
 			minestore: { baseUrl },
 		} = config().env;
-		const { sessionId: _session_id, authToken } = this.session;
+		const { sessionId, authToken } = this.session;
 		const { minestoreId } = variation;
 		const date = new Date().toLocaleString('pt-br', { timeZone });
 		const params = new URLSearchParams();
@@ -67,7 +66,7 @@ export class MinestoreStock {
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
 					'X-CSRF-Token': authToken,
-					Cookie: `${SESSION_ID_KEY}=${_session_id};`,
+					Cookie: `${SESSION_ID_KEY}=${sessionId};`,
 				},
 			});
 
