@@ -4,31 +4,38 @@ import { ProductsTopic } from '@core/pubsub/products-topic';
 import { getProducts, getProductsOnce } from './getProducts';
 import { minestoreAuth } from '@core/minestore';
 import { productsMocks } from '@db/product/__mocks__/products.mock';
+import { IQueryBuilder } from 'fireorm';
 
 jest.mock('@core/pubsub');
 jest.mock('@core/minestore');
 
 describe('functions:getProducts', () => {
-	const publishSpy = jest.spyOn(ProductsTopic.prototype, 'publish');
 	const req = { body: {} } as Request;
-	const res: any = { json: jest.fn() };
+	const res: any = { sendStatus: jest.fn() };
 
-	const mockProducts: Product[] = [productsMocks[0]];
+	const mockProducts = [productsMocks[0]];
 
-	beforeAll(() => {
+	beforeEach(() => {
+		process.env.NODE_ENV = 'development';
+		const mockFirebaseQuery: Partial<IQueryBuilder<Product>> = {
+			find: jest.fn().mockResolvedValue(mockProducts),
+		};
 		minestoreAuth.loginOnce = jest.fn().mockReturnValue(Promise.resolve());
-		productRepository.find = jest
-			.fn<Promise<Product[]>, any[]>()
-			.mockImplementation(() => Promise.resolve(mockProducts));
+		productRepository.whereEqualTo = jest
+			.fn()
+			.mockReturnValue(mockFirebaseQuery as IQueryBuilder<Product>);
+		productRepository.find = jest.fn().mockResolvedValue(mockProducts);
+		ProductsTopic.prototype.publish = jest.fn();
 	});
 
 	describe('getProducts', () => {
 		test('should publish products to the topic from database', async () => {
+			process.env.NODE_ENV = 'production';
 			await getProducts({}, { timestamp: new Date().toISOString() });
 
 			expect(productRepository.find).toBeCalled();
 			expect(minestoreAuth.loginOnce).toBeCalled();
-			expect(publishSpy).toBeCalled();
+			expect(ProductsTopic.prototype.publish).toBeCalled();
 		});
 	});
 
@@ -36,9 +43,9 @@ describe('functions:getProducts', () => {
 		test('should publish products to the topic', async () => {
 			await getProductsOnce(req, res);
 
-			expect(res.json).toBeCalledWith(mockProducts);
+			expect(res.sendStatus).toBeCalled();
 			expect(minestoreAuth.loginOnce).toBeCalled();
-			expect(publishSpy).toBeCalled();
+			expect(ProductsTopic.prototype.publish).toBeCalled();
 		});
 
 		test('should log exception', async () => {
@@ -50,6 +57,15 @@ describe('functions:getProducts', () => {
 			} catch {}
 
 			expect(logger.error).toBeCalled();
+		});
+
+		test('should use development data', async () => {
+			process.env.NODE_ENV = 'development';
+			await getProductsOnce(req, res);
+
+			expect(productRepository.whereEqualTo).toBeCalled();
+			expect(minestoreAuth.loginOnce).toBeCalled();
+			expect(ProductsTopic.prototype.publish).toBeCalled();
 		});
 	});
 });

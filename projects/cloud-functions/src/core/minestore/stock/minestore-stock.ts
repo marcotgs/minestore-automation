@@ -75,6 +75,7 @@ export class MinestoreStock {
 			}
 		} catch (ex) {
 			logger.error(`error when updating stock - ex: ${ex.message}`);
+			throw ex;
 		}
 	}
 

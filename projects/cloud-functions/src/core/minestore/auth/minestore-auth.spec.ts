@@ -2,6 +2,7 @@ import { Page } from 'puppeteer';
 import firebaseTest from 'firebase-functions-test';
 
 import {
+	mockBrowser,
 	mockCloseConnection,
 	mockOpenConnection,
 	mockPage,
@@ -20,7 +21,7 @@ class TestMinestoreAuth extends MinestoreAuth {
 		super();
 	}
 	async testGetAuthData(): Promise<MinestoreSessionData> {
-		return await super.getAuthData(mockPage as Page);
+		return super.getAuthData(mockPage as Page);
 	}
 
 	async testSubmitLoginForm(): Promise<void> {
@@ -41,13 +42,14 @@ describe('MinestoreAuth', () => {
 	});
 
 	afterEach(() => {
+		mockPage.waitForSelector = jest.fn();
 		firebaseInstance.mockConfig({
 			env: environment,
 		});
 	});
 
 	describe('login()', () => {
-		test('should execute login and get session', async () => {
+		test('should execute login and get session and browser connection', async () => {
 			const session = await testMinestoreAuth.login();
 
 			expect(mockPage.goto).toBeCalledWith(expect.stringContaining('/entrar'), {
@@ -55,8 +57,7 @@ describe('MinestoreAuth', () => {
 			});
 			expect(mockPage.click).toBeCalledWith(expect.stringContaining('btn-login'));
 			expect(mockPage.waitForSelector).toBeCalledWith(expect.stringContaining('main-nav'));
-			expect(session).toEqual(mockSession);
-			expect(mockCloseConnection).toHaveBeenCalledWith({ page: mockPage });
+			expect(session).toEqual({ browser: mockBrowser, page: mockPage });
 		});
 
 		test('should throw exception', async () => {
@@ -71,7 +72,9 @@ describe('MinestoreAuth', () => {
 				expect(ex.message).toContain(message);
 			}
 		});
+	});
 
+	describe('loginOnce()', () => {
 		test('should use debugSession', async () => {
 			const debugSession: MinestoreSessionData = {
 				sessionId: 'test',
@@ -86,42 +89,68 @@ describe('MinestoreAuth', () => {
 				},
 			});
 
-			const sessionData = await testMinestoreAuth.login();
+			const sessionData = await testMinestoreAuth.loginOnce();
 
 			expect(sessionData).toEqual(debugSession);
 		});
 
-		describe('submitLoginForm()', () => {
-			test('should fill data and submit form', async () => {
-				const {
-					minestore: { email, password },
-				} = environment;
-				await testMinestoreAuth.testSubmitLoginForm();
-
-				expect(mockPage.focus).toBeCalledWith(expect.stringContaining('#user_email'));
-				expect(mockPage.keyboard?.type).toBeCalledWith(expect.stringContaining(email));
-
-				expect(mockPage.focus).toBeCalledWith(expect.stringContaining('#user_password'));
-				expect(mockPage.keyboard?.type).toBeCalledWith(expect.stringContaining(password));
-
-				expect(mockPage.click).toBeCalledWith(expect.stringContaining('btn-login'));
+		test('should throw exception', async () => {
+			const message = 'error';
+			mockPage.waitForSelector = jest.fn(() => {
+				throw new Error(message);
 			});
+
+			try {
+				await testMinestoreAuth.loginOnce();
+			} catch (ex) {
+				expect(ex.message).toContain(message);
+			}
 		});
 
-		describe('getAuthData()', () => {
-			test('should get auth data in cookies and meta tags', async () => {
-				const { sessionId, authToken } = mockSession;
-				jest.spyOn(document, 'querySelector').mockReturnValue({
-					content: authToken,
-				} as HTMLMetaElement);
-				mockPage.cookies = jest
-					.fn()
-					.mockResolvedValue([{ name: SESSION_ID_KEY, value: sessionId }]);
+		test('should close connection', async () => {
+			await testMinestoreAuth.loginOnce();
 
-				const session = await testMinestoreAuth.testGetAuthData();
+			expect(mockCloseConnection).toBeCalled();
+		});
+	});
 
-				expect(session).toEqual(mockSession);
-			});
+	describe('submitLoginForm()', () => {
+		test('should fill data and submit form', async () => {
+			const {
+				minestore: { email, password },
+			} = environment;
+			await testMinestoreAuth.testSubmitLoginForm();
+
+			expect(mockPage.focus).toBeCalledWith(expect.stringContaining('#user_email'));
+			expect(mockPage.keyboard?.type).toBeCalledWith(expect.stringContaining(email));
+
+			expect(mockPage.focus).toBeCalledWith(expect.stringContaining('#user_password'));
+			expect(mockPage.keyboard?.type).toBeCalledWith(expect.stringContaining(password));
+
+			expect(mockPage.click).toBeCalledWith(expect.stringContaining('btn-login'));
+		});
+	});
+
+	describe('getAuthData()', () => {
+		test('should get auth data in cookies and meta tags', async () => {
+			const { sessionId, authToken } = mockSession;
+			jest.spyOn(document, 'querySelector').mockReturnValue({
+				content: authToken,
+			} as HTMLMetaElement);
+			mockPage.cookies = jest.fn().mockResolvedValue([{ name: SESSION_ID_KEY, value: sessionId }]);
+
+			const session = await testMinestoreAuth.testGetAuthData();
+
+			expect(session).toEqual(mockSession);
+		});
+
+		test('should return empty session data when session was not found on page', async () => {
+			jest.spyOn(document, 'querySelector').mockReturnValue(null);
+			mockPage.cookies = jest.fn().mockResolvedValue([]);
+
+			const session = await testMinestoreAuth.testGetAuthData();
+
+			expect(session).toEqual({});
 		});
 	});
 });

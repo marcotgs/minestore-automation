@@ -1,12 +1,12 @@
+import fetch, { Response } from 'node-fetch';
 import { MinestoreStock } from '@core/minestore';
 import { mockSession } from '@core/minestore/auth/__mocks__/minestore-auth.mock';
-import { mockPage } from '@core/puppeteer/__mocks__/puppeteer.config.mock';
-import { productRepository, ProductStatus } from '@db/product';
+import { productRepository } from '@db/product';
 import { productsMocks } from '@db/product/__mocks__/products.mock';
+import { updateQuantity } from './updateQuantity';
+import { mockProductVariations } from '@db/product-variation/__mocks__/product-variations.mock';
 
-jest.mock('@core/puppeteer', () => ({
-	openConnection: jest.fn(() => Promise.resolve({ page: mockPage })),
-}));
+jest.mock('node-fetch', () => jest.fn());
 jest.mock('@core/minestore/stock');
 jest.mock('@db/product');
 jest.mock('firebase-functions', () => ({
@@ -26,65 +26,51 @@ jest.mock('firebase-functions', () => ({
 	}),
 }));
 
-import { updateQuantity } from './updateQuantity';
-
 describe('updateQuantity', () => {
+	const product = productsMocks[1];
+	const mockedQuantity = 20;
+
+	const mockFetch = (quantity = mockedQuantity) => {
+		const stockAvailability = quantity ? `max="${quantity}"` : '';
+		(fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({
+			text: () => Promise.resolve(`<input id="input-quantity" ${stockAvailability}/>`),
+		} as Response);
+	};
+
 	beforeEach(() => {
 		MinestoreStock.prototype.updateVariationStock = jest.fn();
-		productRepository.findById = jest.fn().mockResolvedValue(productsMocks[0]);
+		productRepository.findById = jest.fn().mockResolvedValue(product);
 		productRepository.update = jest.fn();
 	});
 	const message = { json: { id: 'test', data: mockSession } };
 
 	test('should get quantity from supplier and update quantity', async () => {
-		const quantity = 20;
-		mockPage.$ = jest.fn().mockResolvedValue(true);
-		mockPage.$eval = jest.fn((_a, fn) => fn()).mockResolvedValue(20);
-
+		mockFetch();
 		await updateQuantity(message, {});
 
-		expect(mockPage.goto).toBeCalledWith(expect.stringContaining(productsMocks[0].supplierUrl), {
-			waitUntil: 'load',
-		});
+		expect(fetch).toBeCalled();
 
-		expect(MinestoreStock.prototype.updateVariationStock).toBeCalledWith(quantity);
+		expect(MinestoreStock.prototype.updateVariationStock).toBeCalledWith(
+			mockedQuantity,
+			mockProductVariations[0],
+		);
 	});
 
 	test('should update stock when product on supplier is sold out', async () => {
-		mockPage.$ = jest.fn().mockResolvedValue(false);
-
+		mockFetch(0);
 		await updateQuantity(message, {});
 
-		expect(mockPage.goto).toBeCalledWith(expect.stringContaining(productsMocks[0].supplierUrl), {
-			waitUntil: 'load',
-		});
-
-		expect(MinestoreStock.prototype.updateVariationStock).toBeCalledWith(0);
+		expect(fetch).toBeCalled();
+		expect(MinestoreStock.prototype.updateVariationStock).toBeCalledWith(
+			0,
+			mockProductVariations[0],
+		);
 	});
 
 	test(`shouldn't update stock when product has the same quantity as the supplier`, async () => {
-		mockPage.$ = jest.fn().mockResolvedValue(true);
-		mockPage.$eval = jest.fn((_a, fn: any) => {
-			return fn({ getAttribute: () => 2 });
-		});
-
+		mockFetch(mockProductVariations[0].quantity);
 		await updateQuantity(message, {});
 
 		expect(MinestoreStock.prototype.updateVariationStock).not.toHaveBeenCalled();
-	});
-
-	test(`should update product when an error was thrown`, async () => {
-		mockPage.$ = jest.fn().mockImplementation(() => {
-			throw new Error();
-		});
-
-		try {
-			await updateQuantity(message, {});
-		} catch {}
-
-		expect(MinestoreStock.prototype.updateVariationStock).not.toHaveBeenCalled();
-		expect(productRepository.update).toHaveBeenCalledWith(
-			expect.objectContaining({ status: ProductStatus.synced_error }),
-		);
 	});
 });

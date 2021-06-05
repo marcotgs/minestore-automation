@@ -34,10 +34,10 @@ describe('Puppeteer config', () => {
 		expect(mockPage.close).toBeCalled();
 	});
 
-	test('should not close connection with browser and/or page is not defined', async () => {
-		await closeConnection({});
+	test('should not close connection when browser is not defined', async () => {
+		await closeConnection({ page: mockPage as Page });
 
+		expect(mockPage.close).toBeCalled();
 		expect(mockBrowser.close).not.toBeCalled();
-		expect(mockPage.close).not.toBeCalled();
 	});
 });

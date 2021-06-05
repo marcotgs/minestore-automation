@@ -7,12 +7,15 @@ const mockKeyboard: Partial<Keyboard> = {
 
 export const mockPage: Partial<Page> = {
 	$: jest.fn(),
+	$$: jest.fn(),
 	$eval: jest.fn((_a, fn: any) => fn()),
+	$$eval: jest.fn((_a, fn: any) => fn()),
 	close: jest.fn(),
 	goto: jest.fn(),
 	focus: jest.fn(),
 	click: jest.fn(),
 	waitForSelector: jest.fn(),
+	waitForTimeout: jest.fn(),
 	evaluate: jest.fn((fn: any) => fn()),
 	cookies: jest.fn(),
 	keyboard: mockKeyboard as Keyboard,

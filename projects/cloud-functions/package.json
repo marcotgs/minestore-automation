@@ -14,7 +14,7 @@
     "watch": "webpack --watch --mode=development",
     "shell": "firebase functions:shell",
     "emulator": "firebase emulators:start --import ./config/seed-data",
-    "test": "jest --watch --coverage -o",
+    "test": "jest --watch --coverage -o --detectOpenHandles",
     "test:prod": "jest --watchAll=false --coverage",
     "logs": "firebase functions:log"
   },

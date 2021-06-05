@@ -2,17 +2,10 @@ import { ISubCollection } from 'fireorm';
 
 import { Product } from '@db/product';
 import { ProductVariation } from '@db/product-variation';
-import { mockProductVariations } from '@db/product-variation/__mocks__/product-variations.mock';
-
-const variations: Partial<ISubCollection<ProductVariation>> = {
-	create: jest.fn(),
-	find: jest.fn().mockResolvedValue(mockProductVariations),
-	findById: jest
-		.fn<Promise<ProductVariation | null>, any[]>()
-		.mockImplementation((queryId) =>
-			Promise.resolve(mockProductVariations.find(({ id }) => queryId === id) ?? null),
-		),
-};
+import {
+	getMockedVariationsCollection,
+	mockProductVariations,
+} from '@db/product-variation/__mocks__/product-variations.mock';
 
 export const productsMocks: Product[] = [
 	{
@@ -20,13 +13,15 @@ export const productsMocks: Product[] = [
 		minestoreId: 'steel-bike',
 		name: 'Sleek Steel Bike',
 		createdDate: 'Mon Apr 05 2021 07:04:09 GMT+0200 (Central European Summer Time)',
-		variations: variations as ISubCollection<ProductVariation>,
+		variations: getMockedVariationsCollection() as ISubCollection<ProductVariation>,
 	},
 	{
 		id: 'test2',
 		minestoreId: 'sleek-wooden-soap',
 		name: 'Sleek Wooden Soap',
 		createdDate: 'Mon Apr 05 2021 07:04:09 GMT+0200 (Central European Summer Time)',
-		variations: variations as ISubCollection<ProductVariation>,
+		variations: getMockedVariationsCollection([
+			mockProductVariations[0],
+		]) as ISubCollection<ProductVariation>,
 	},
 ];

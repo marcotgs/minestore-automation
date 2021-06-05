@@ -15,7 +15,7 @@ export class ProductVariation extends DateFields {
 
 	minestoreId: string;
 
-	quantity: number;
+	quantity?: number;
 
 	supplierUrl: string;
 

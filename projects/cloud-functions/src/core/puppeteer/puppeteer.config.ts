@@ -18,6 +18,6 @@ export const openConnection = async (): Promise<PuppeteerConnection> => {
 
 export const closeConnection = async (connection: PuppeteerConnection): Promise<void> => {
 	const { page, browser } = connection;
-	if (page) await page.close();
+	await page.close();
 	if (browser) await browser.close();
 };
