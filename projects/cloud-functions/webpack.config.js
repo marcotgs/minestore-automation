@@ -4,6 +4,7 @@ const path = require('path');
 var nodeExternals = require('webpack-node-externals');
 const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const tsConfigPath = 'tsconfig.build.json';
 
 const customStats = {
 	stats: {
@@ -42,17 +43,21 @@ module.exports = (_env, argv) => {
 		module: {
 			rules: [
 				{
-					test: /\.tsx?$/,
-					loader: 'ts-loader',
-					options: {
-						transpileOnly: true,
-					},
+					test: /\.ts?$/,
+					use: [
+						{
+							loader: 'ts-loader',
+							options: {
+								configFile: tsConfigPath,
+							},
+						},
+					],
 				},
 			],
 		},
 		resolve: {
-			extensions: ['.ts', '.tsx'],
-			plugins: [new TsconfigPathsPlugin()],
+			extensions: ['.ts'],
+			plugins: [new TsconfigPathsPlugin({ configFile: tsConfigPath })],
 		},
 		plugins: [
 			new CopyPlugin({

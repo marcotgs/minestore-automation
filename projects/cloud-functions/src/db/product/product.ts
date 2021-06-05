@@ -1,32 +1,20 @@
 import { Collection, getRepository, ISubCollection, SubCollection } from 'fireorm';
-import { Stock, StockSupplier } from './stock';
 
-export enum ProductStatus {
-	new = 'NEW',
-	available = 'AVAILABLE',
-	sold_out = 'SOLD_OUT',
-	synced_error = 'SYNCED_ERROR',
-}
+import { DateFields } from '@db/base/date-fields';
+import { ProductVariation } from '@db/product-variation';
+
 @Collection('products')
-export class Product {
+export class Product extends DateFields {
 	id!: string;
 
-	minestoreId!: string;
+	minestoreId: string;
 
-	name!: string;
+	name: string;
 
-	supplierUrl!: string;
+	images?: string[];
 
-	status: ProductStatus;
-
-	createdDate?: string;
-
-	updatedDate?: string;
-
-	quantity?: number;
-
-	@SubCollection(Stock, `stock-${StockSupplier.star}`)
-	stockStar?: ISubCollection<Stock>;
+	@SubCollection(ProductVariation, 'variations')
+	variations?: ISubCollection<ProductVariation>;
 }
 
 export const productRepository = getRepository(Product);

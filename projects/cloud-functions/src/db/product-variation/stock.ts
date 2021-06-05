@@ -1,3 +1,5 @@
+import { DateFields } from '@db/base/date-fields';
+
 export enum StockSupplier {
 	star = 'star',
 }
@@ -7,10 +9,8 @@ export enum StockType {
 	out = 'OUT',
 }
 
-export class Stock {
+export class Stock extends DateFields {
 	id!: string;
-
-	date: string;
 
 	quantity: number;
 

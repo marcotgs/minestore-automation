@@ -12,5 +12,5 @@
     "baseUrl": ".",
     "incremental": true
   },
-  "exclude": ["node_modules", "src/testing/**.*", "src/___mocks___/**.*"]
+  "exclude": ["node_modules"]
 }

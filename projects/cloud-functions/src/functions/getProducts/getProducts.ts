@@ -1,17 +1,22 @@
 import { region, logger } from 'firebase-functions';
 
-import { productRepository } from '@db/product';
-import { ProductsTopic } from '@pubsub/products';
+import { Product, productRepository } from '@db/product';
+import { ProductsTopic } from '@core/pubsub/products-topic';
 import { minestoreAuth } from '@core/minestore';
 
 const productsTopic = new ProductsTopic();
 productsTopic.create();
 
 async function publishProductsTopic() {
-	const minestoreSession = await minestoreAuth.login();
-	const products = (await productRepository.find()).filter(
-		({ minestoreId }) => minestoreId === '4412762',
-	);
+	const minestoreSession = await minestoreAuth.loginOnce();
+	let products: Product[] = [];
+
+	if (process.env.NODE_ENV !== 'production') {
+		products = await productRepository.whereEqualTo('minestoreId', 'produto-teste').find();
+	} else {
+		products = await productRepository.find();
+	}
+
 	await productsTopic.publish(products, minestoreSession);
 	return products;
 }
@@ -39,8 +44,8 @@ export const getProductsOnce = region('southamerica-east1')
 	.runWith({ memory: '1GB' })
 	.https.onRequest(async (_req, res) => {
 		try {
-			const products = await publishProductsTopic();
-			res.json(products);
+			await publishProductsTopic();
+			res.sendStatus(200);
 		} catch (ex) {
 			logger.error(`get products -> Error: ${ex}`, {
 				structuredData: true,

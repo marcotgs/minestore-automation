@@ -14,7 +14,7 @@
     "watch": "webpack --watch --mode=development",
     "shell": "firebase functions:shell",
     "emulator": "firebase emulators:start --import ./config/seed-data",
-    "test": "jest --watch --coverage -o",
+    "test": "jest --watch --coverage -o --detectOpenHandles",
     "test:prod": "jest --watchAll=false --coverage",
     "logs": "firebase functions:log"
   },
@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@google-cloud/pubsub": "^2.10.0",
+    "cheerio": "^1.0.0-rc.6",
     "class-validator": "^0.13.1",
     "firebase-admin": "^9.6.0",
     "firebase-functions": "^3.13.0",

@@ -1,6 +1,6 @@
 import { Page } from 'puppeteer';
 import { config } from 'firebase-functions';
-import { closeConnection, openConnection } from '@core/puppeteer';
+import { closeConnection, openConnection, PuppeteerConnection } from '@core/puppeteer';
 
 export const SESSION_ID_KEY = '_session_id';
 
@@ -9,28 +9,48 @@ export interface MinestoreSessionData {
 	authToken?: any;
 }
 export class MinestoreAuth {
-	public async login(): Promise<MinestoreSessionData> {
+	/**
+	 * Executes the login on `Minestore` and closes all the connections.
+	 */
+	public async loginOnce(): Promise<MinestoreSessionData> {
+		const connection = await openConnection();
+
+		try {
+			return await this.executeLogin(connection);
+		} catch (e) {
+			throw new Error(e);
+		} finally {
+			closeConnection(connection);
+		}
+	}
+
+	/**
+	 * Executes the login on `Minestore` and keep connection open to be used later on.
+	 */
+	public async login(): Promise<PuppeteerConnection> {
+		const connection = await openConnection();
+		try {
+			await this.executeLogin(connection);
+			return connection;
+		} catch (e) {
+			throw new Error(e);
+		}
+	}
+
+	protected async executeLogin({ page }: PuppeteerConnection): Promise<MinestoreSessionData> {
 		const {
 			minestore: { debugSession, baseUrl },
 		} = config().env;
 
 		if (debugSession) return debugSession;
 
-		const { page } = await openConnection();
+		await page.goto(`${baseUrl}/entrar`, {
+			waitUntil: 'load',
+		});
 
-		try {
-			await page.goto(`${baseUrl}/entrar`, {
-				waitUntil: 'load',
-			});
-
-			await this.submitLoginForm(page);
-			await page.waitForSelector('nav[class*="main-nav"]'); // admin page was loaded
-			return await this.getAuthData(page);
-		} catch (e) {
-			throw new Error(e);
-		} finally {
-			closeConnection({ page });
-		}
+		await this.submitLoginForm(page);
+		await page.waitForSelector('nav[class*="main-nav"]'); // admin page was loaded
+		return this.getAuthData(page);
 	}
 
 	protected async getAuthData(page: Page): Promise<MinestoreSessionData> {

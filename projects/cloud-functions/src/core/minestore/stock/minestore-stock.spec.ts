@@ -1,14 +1,15 @@
-import { ISubCollection } from 'fireorm';
 import fetch, { Response } from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { logger } from 'firebase-functions';
 
-import { Product, productRepository, ProductStatus, Stock, StockType } from '@db/product';
+import { Product, productRepository } from '@db/product';
 import { MinestoreSessionData } from '@core/minestore/auth';
 import { productsMocks } from '@db/product/__mocks__/products.mock';
 import { mockSession } from '@core/minestore/auth/__mocks__/minestore-auth.mock';
 import { MinestoreStock } from './minestore-stock';
 import { environment } from '@testing/environment';
+import { ProductVariation, ProductVariationStatus, Stock, StockType } from '@db/product-variation';
+import { mockProductVariations } from '@db/product-variation/__mocks__/product-variations.mock';
 
 jest.mock('node-fetch', () => jest.fn());
 jest.mock('@db/product');
@@ -18,16 +19,16 @@ class TestMinestoreStock extends MinestoreStock {
 		super(session, product);
 	}
 
-	async testPostUpdateMinestoreStock(stock: Stock): Promise<void> {
-		await super.postUpdateMinestoreStock(stock);
+	async testPostUpdateMinestoreStock(stock: Stock, variation: ProductVariation): Promise<void> {
+		await super.postUpdateMinestoreStock(stock, variation);
 	}
 
-	async testCreateStock(quantitySupplier: number): Promise<void> {
-		await super.createStock(quantitySupplier);
+	async testCreateStock(quantitySupplier: number, variation: ProductVariation): Promise<void> {
+		await super.createStock(quantitySupplier, variation);
 	}
 
-	async testUpdateProduct(quantitySupplier: number): Promise<void> {
-		await super.updateProduct(quantitySupplier);
+	async testUpdateVariation(quantitySupplier: number, variation: ProductVariation): Promise<void> {
+		await super.updateVariation(quantitySupplier, variation);
 	}
 }
 
@@ -35,19 +36,12 @@ describe('MinestoreStock', () => {
 	const date = '2020-04-15';
 	let testMinestoreStock: TestMinestoreStock;
 	let mockProduct: Product;
-	let stockStar: Partial<ISubCollection<Stock>>;
+	let mockProductVariation = mockProductVariations[0];
 	let mockDate: jest.SpyInstance<string, any[]>;
 
 	beforeEach(() => {
 		productRepository.update = jest.fn();
-		stockStar = {
-			create: jest.fn(),
-			delete: jest.fn(),
-			update: jest.fn(),
-			findById: jest.fn<Promise<Stock | null>, any[]>(),
-		};
 		mockProduct = productsMocks[0];
-		mockProduct.stockStar = stockStar as ISubCollection<Stock>;
 		testMinestoreStock = new TestMinestoreStock(mockSession, productsMocks[0]);
 		mockDate = jest.spyOn(Date.prototype, 'toLocaleString').mockReturnValue(date);
 	});
@@ -56,18 +50,17 @@ describe('MinestoreStock', () => {
 		mockDate.mockRestore();
 	});
 
-	describe('updateStock()', () => {
+	describe('updateVariationStock()', () => {
 		test('should call helper methods that handles the stock update', async () => {
 			(fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce({ ok: true } as Response);
 			const {
 				minestore: { baseUrl },
 			} = environment;
-			const { minestoreId } = mockProduct;
+			const { stockStar, minestoreId } = mockProductVariation;
 
-			await testMinestoreStock.updateStock(2);
+			await testMinestoreStock.updateVariationStock(2, mockProductVariation);
 
-			expect(productRepository.update).toBeCalled();
-			expect(stockStar.create).toBeCalled();
+			expect(stockStar?.create).toBeCalled();
 			expect(fetch).toBeCalledWith(
 				`${baseUrl}/estoques/${minestoreId}/movimentacoes/criar`,
 				expect.objectContaining({
@@ -86,7 +79,7 @@ describe('MinestoreStock', () => {
 			(fetch as jest.MockedFunction<typeof fetch>).mockResolvedValueOnce(response as Response);
 
 			try {
-				await testMinestoreStock.updateStock(2);
+				await testMinestoreStock.updateVariationStock(2, mockProductVariations[0]);
 			} catch (ex) {
 				expect(ex.message).toBe(textResponse);
 				expect(logger.error).toBeCalled();
@@ -118,7 +111,7 @@ describe('MinestoreStock', () => {
 			mockStock = {
 				id: 'test',
 				quantity: 20,
-				date: 'Sat May 01 2021 08:31:18 GMT+0200 (Central European Summer Time)',
+				createdDate: 'Sat May 01 2021 08:31:18 GMT+0200 (Central European Summer Time)',
 			};
 		});
 
@@ -127,10 +120,10 @@ describe('MinestoreStock', () => {
 			const {
 				minestore: { baseUrl },
 			} = environment;
-			const { minestoreId } = mockProduct;
+			const { minestoreId } = mockProductVariation;
 			mockStock.type = StockType.entry;
 
-			await testMinestoreStock.testPostUpdateMinestoreStock(mockStock);
+			await testMinestoreStock.testPostUpdateMinestoreStock(mockStock, mockProductVariation);
 
 			expect(fetch).toBeCalledWith(
 				`${baseUrl}/estoques/${minestoreId}/movimentacoes/criar`,
@@ -146,10 +139,10 @@ describe('MinestoreStock', () => {
 			const {
 				minestore: { baseUrl },
 			} = environment;
-			const { minestoreId } = mockProduct;
+			const { minestoreId } = mockProductVariation;
 			mockStock.type = StockType.out;
 
-			await testMinestoreStock.testPostUpdateMinestoreStock(mockStock);
+			await testMinestoreStock.testPostUpdateMinestoreStock(mockStock, mockProductVariation);
 
 			expect(fetch).toBeCalledWith(
 				`${baseUrl}/estoques/${minestoreId}/movimentacoes/criar`,
@@ -163,52 +156,59 @@ describe('MinestoreStock', () => {
 
 	describe('createStock()', () => {
 		test('should create an entry stock document', async () => {
-			testMinestoreStock = new TestMinestoreStock(mockSession, {
-				...productsMocks[0],
-				quantity: undefined,
-			});
+			const { stockStar } = mockProductVariation;
 			const quantitySupplier = 3;
 
-			await testMinestoreStock.testCreateStock(quantitySupplier);
+			await testMinestoreStock.testCreateStock(quantitySupplier, {
+				...mockProductVariation,
+				quantity: undefined,
+			});
 
-			expect(stockStar.create).toBeCalledWith({
-				date,
+			expect(stockStar?.create).toBeCalledWith({
+				updatedDate: date,
 				type: StockType.entry,
 				quantity: quantitySupplier,
 			});
 		});
 
 		test('should create an out stock document', async () => {
+			const { stockStar } = mockProductVariation;
 			const quantitySupplier = 0;
 
-			await testMinestoreStock.testCreateStock(quantitySupplier);
+			await testMinestoreStock.testCreateStock(quantitySupplier, mockProductVariations[0]);
 
-			expect(stockStar.create).toBeCalledWith({
-				date,
+			expect(stockStar?.create).toBeCalledWith({
+				updatedDate: date,
 				type: StockType.out,
 				quantity: 2,
 			});
 		});
 	});
 
-	describe('updateProduct()', () => {
-		test('should update quantity product', async () => {
+	describe('updateVariation()', () => {
+		test('should update quantity product variation', async () => {
 			const quantitySupplier = 3;
 
-			await testMinestoreStock.testUpdateProduct(quantitySupplier);
+			await testMinestoreStock.testUpdateVariation(quantitySupplier, mockProductVariations[0]);
 
-			expect(productRepository.update).toBeCalledWith(
-				expect.objectContaining({ quantity: quantitySupplier, status: ProductStatus.available }),
+			expect(mockProduct.variations?.update).toBeCalledWith(
+				expect.objectContaining({
+					quantity: quantitySupplier,
+					status: ProductVariationStatus.available,
+				}),
 			);
 		});
 
 		test(`should update quantity product when it's sold out`, async () => {
 			const quantitySupplier = 0;
 
-			await testMinestoreStock.testUpdateProduct(quantitySupplier);
+			await testMinestoreStock.testUpdateVariation(quantitySupplier, mockProductVariations[0]);
 
-			expect(productRepository.update).toBeCalledWith(
-				expect.objectContaining({ quantity: quantitySupplier, status: ProductStatus.sold_out }),
+			expect(mockProduct.variations?.update).toBeCalledWith(
+				expect.objectContaining({
+					quantity: quantitySupplier,
+					status: ProductVariationStatus.sold_out,
+				}),
 			);
 		});
 	});
